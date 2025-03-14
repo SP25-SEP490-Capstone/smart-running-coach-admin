@@ -1,0 +1,29 @@
+.common-text-editor {
+  .ql-editor {
+    min-height: 250px;
+  }
+
+  .character-count {
+    text-align: right;
+    padding: 5px;
+    font-size: 14px;
+    color: #666;
+
+    &.limit-reached {
+      color: red;
+    }
+  }
+
+  .ql-snow {
+    .ql-picker {
+      &.ql-size {
+        .ql-picker-label,
+        .ql-picker-item {
+          &::before {
+            content: attr(data-value) !important;
+          }
+        }
+      }
+    }
+  }
+}

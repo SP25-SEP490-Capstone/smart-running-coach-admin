@@ -1,0 +1,91 @@
+.tickets-detail-page {
+  padding: 20px 2rem;
+
+  .ticket-card {
+    border-left: 5px solid #1976d2;
+  }
+
+  .ticket-meta {
+    background-color: #FFF;
+    padding: 20px 2rem;
+
+    &-info {
+      display: flex;
+      justify-content: space-between;
+
+      .field {
+        color: #737373;
+        font-size: 13px;
+
+        span {
+          color: #000000;
+        }
+      }
+    }
+
+    &-status {
+      display: flex;
+      gap: 25px;
+
+      p {
+        margin-bottom: 10px;
+      }
+
+      .MuiChip-root {
+        height: 23px;
+      }
+    }
+
+    .ticket-title {
+      font-size: 22px;
+      font-weight: 600;
+    }
+  }
+
+  .status-priority {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .messages-section {
+    background-color: #ffffff;
+    padding: 20px 2rem;
+    height: 450px;
+    overflow-y: auto;
+    
+    .message-card {
+      width: 55%;
+      margin-top: 15px;
+      padding: 0px 10px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+
+      .email {
+        font-size: 13px;
+        color: #6a6a6a;
+      }
+
+      &.response {
+        background-color: #e3f2fd;
+      }
+    }
+  }
+
+  .reply-section {
+    background-color: #ffffff;
+    padding: 20px 2rem;
+
+    .reply-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+  }
+
+  .btn-mark-unread {
+    color: #ffffff;
+    background-color: #6a6a6a;
+  }
+}

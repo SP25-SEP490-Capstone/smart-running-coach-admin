@@ -1,0 +1,28 @@
+.home-layout {
+  display: flex;
+
+  &-content {
+    max-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    width: 100%;
+    box-sizing: border-box;
+    color: #000;
+    overflow: hidden;
+  }
+
+  .page {
+    overflow-y: auto;
+    background-color: #f2f2f2 !important;
+  }
+
+  .title-container {
+    margin-bottom: 40px;
+    width: 100%;
+
+    h1 {
+      font-size: 25px;
+      font-weight: 600;
+    }
+  }
+}

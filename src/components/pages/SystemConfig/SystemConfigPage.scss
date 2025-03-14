@@ -1,0 +1,103 @@
+.system-config-page {
+  padding: 20px 2rem;
+
+  .title-container {
+    margin-bottom: 1.5rem;
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  .info-cards {
+    margin-bottom: 2rem;
+  }
+
+  .info-card {
+    border: 1px solid #eee;
+    box-shadow: none;
+    transition: box-shadow 0.2s ease-in-out;
+
+    &:hover {
+      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    .card-subtitle {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+
+    .info-detail {
+      display: flex;
+      justify-content: space-between;
+      margin: 0.25rem 0;
+
+      span {
+        font-size: 0.875rem;
+      }
+
+      &:first-of-type {
+        margin-top: 0.5rem;
+      }
+    }
+
+    .progress-bar {
+      margin-top: 1rem;
+    }
+  }
+
+  .system-stats {
+    margin-bottom: 2rem;
+
+    .stats-title {
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .info-detail {
+      display: flex;
+      justify-content: space-between;
+      margin: 0.5rem 0;
+
+      span {
+        font-size: 0.875rem;
+      }
+    }
+
+    .status-text {
+      font-weight: 500;
+
+      &.optimal {
+        color: #2e7d32; // green-ish
+      }
+
+      &.warning {
+        color: #ed6c02; // orange-ish
+      }
+    }
+  }
+
+  .maintenance-section {
+    margin-top: 2rem;
+
+    .MuiFormControlLabel-root {
+      margin-right: 0;
+      margin-bottom: 1rem;
+    }
+
+    .MuiTextField-root {
+      margin-bottom: 1rem;
+    }
+  }
+}

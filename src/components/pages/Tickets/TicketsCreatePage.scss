@@ -1,0 +1,40 @@
+.tickets-create-page {
+  margin: 0 auto;
+  padding: 20px 2rem;
+  box-sizing: border-box;
+  background-color: #f5f6fa;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+
+    .use-template-button {
+      text-transform: none;
+    }
+  }
+
+  .page-title {
+    font-size: 25px;
+    font-weight: 600;
+  }
+
+  .compose-form {
+    padding: 1.5rem;
+    .form-field {
+      margin-bottom: 1rem;
+    }
+
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+    }
+  }
+
+  .btn-template {
+    color: #000;
+    background-color: #e1e1e1;
+  }
+}

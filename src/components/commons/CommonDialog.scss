@@ -1,0 +1,59 @@
+@use "@scss/common.scss" as *;
+
+.common-dialog {
+
+	.MuiDialog-paper {
+		min-height: 70vh;
+		border-radius: 7px;
+	}
+
+	.dialog-titlebar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		border-top-left-radius: 7px;
+		border-top-right-radius: 7px;
+		background-color: $primary-dark-color;
+		color: #FFF;
+		text-align: center;
+		font-size: 17px;
+		font-weight: 600;
+		padding: 8px 1rem;
+	}
+
+	.btn-titlebar {
+		display: flex;
+		align-items: center;
+	}
+
+	.btn-close {
+		color: #FFF;
+		cursor: pointer;
+		min-width: 25px;
+		min-height: 25px;
+		max-width: 25px;
+		max-height: 25px;
+		border-radius: 50%;
+
+		&:hover {
+			background-color: $primary-color-hover;
+		}
+	}
+
+	.dialog-content {
+		overflow-y: auto;
+		max-height: 80vh;
+
+		@media (max-height: 800px) {
+			max-height: 70vh;
+		}
+
+		@media (max-height: 700px) {
+			max-height: 60vh;
+		}
+
+		@media (max-height: 600px) {
+			max-height: 50vh;
+		}
+	}
+}

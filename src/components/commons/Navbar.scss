@@ -1,0 +1,48 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 3px 10px;
+  width: 100%;
+  color: #000;
+  border-bottom: 1px solid #0000001f;
+  z-index: 5;
+
+  .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .MuiBadge-root {
+    cursor: pointer;
+  }
+
+  .MuiAvatar-root {
+    cursor: pointer;
+  }
+}
+
+.navbar-menu {
+
+  .MuiPaper-root {
+    min-width: 200px;
+  }
+
+  .MuiButtonBase-root {
+    padding: 5px 10px;
+  }
+
+  .profile-menu {
+    padding: 1px 10px;
+    &-name {
+      font-weight: 600;
+      font-size: 18px;
+    }
+  }
+
+  .btn-logout {
+    color: #FF0000;
+  }
+}
