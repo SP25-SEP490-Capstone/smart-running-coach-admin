@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getCookie } from "./util_cookie";
 
-const MASTER_URL = "https://src-server.onrender.com/api";
+const MASTER_URL = "https://xavia.pro/api";
 
 const axiosInstance = axios.create({
   baseURL: MASTER_URL,

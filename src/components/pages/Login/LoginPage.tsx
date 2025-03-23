@@ -1,17 +1,55 @@
 import './LoginPage.scss';
 //@ts-ignore
 import logo from '@assets/logo.png';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle } from '@mui/icons-material';
-import { sendSuccessToast } from '@components/utils/util_toastify';
+import { sendErrorToast, sendSuccessToast } from '@components/utils/util_toastify';
+import { apost } from '@components/utils/util_axios';
+import { setCookie } from '@components/utils/util_cookie';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load the email from localStorage when the component mounts
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('savedEmail');
+    if (savedEmail) {
+      setEmail(savedEmail);
+    }
+  }, []);
+
+  // Save the email to localStorage whenever it changes
+  useEffect(() => {
+    if (email) {
+      localStorage.setItem('savedEmail', email);
+    } else {
+      localStorage.removeItem('savedEmail');
+    }
+  }, [email]);
 
   const login = () => {
-    sendSuccessToast('Login successful!');
+    setIsLoading(true);
+    apost('/admins/login', { identifier: email, password })
+      .then((res) => {
+        if (res.status == 200) {
+          let data = res.data;
+          if (data.status == "error") {
+            sendErrorToast(data.message);
+          } else {
+            setCookie('token', data.data.accessToken, 30);
+            sendSuccessToast(data.message);
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 2000);
+          }
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const isValidEmail = (email: string) => {
@@ -61,7 +99,9 @@ export default function LoginPage() {
             <a href='/forgot-password' className='forgot-password'>Forgot Password?</a>
           </div>
 
-          <button type='submit'>Sign in</button>
+          <button type='submit' disabled={isLoading}>
+            {isLoading ? 'Signing in...' : 'Sign in'}
+          </button>
         </form>
       </div>
     </div>

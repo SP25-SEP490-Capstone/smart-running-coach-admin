@@ -1,27 +1,47 @@
-import LoginPage from '@components/pages/Login/LoginPage';
-import NewsPage from '@components/pages/News/NewsPage';
-import PostsPage from '@components/pages/Posts/PostsPage';
-import SystemConfigPage from '@components/pages/SystemConfig/SystemConfigPage';
-import TicketsPage from '@components/pages/Tickets/TicketsPage';
-import UsersPage from '@components/pages/Users/UsersPage';
-import './App.scss';
+import { getCookie } from '@components/utils/util_cookie';
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Route, Routes } from 'react-router-dom';
-import LoginLayout from '@components/layout/LoginLayout';
-import HomeLayout from '@components/layout/HomeLayout';
+import './App.scss';
+import HomeLayout from '@components/layouts/HomeLayout';
+import LoginLayout from '@components/layouts/LoginLayout';
+import LoginPage from '@components/pages/Login/LoginPage';
 import DashboardPage from '@components/pages/Dashboard/DashboardPage';
-import UsersDetailPage from '@components/pages/Users/UsersDetailPage';
-import PostsDetailPage from '@components/pages/Posts/PostsDetailPage';
-import NewsDetailPage from '@components/pages/News/NewsDetailEditPage';
+import NewsPage from '@components/pages/News/NewsPage';
 import NewsDetailEditPage from '@components/pages/News/NewsDetailEditPage';
 import NewsCreatePage from '@components/pages/News/NewsCreatePage';
+import PostsPage from '@components/pages/Posts/PostsPage';
+import PostsDetailPage from '@components/pages/Posts/PostsDetailPage';
+import SystemConfigPage from '@components/pages/SystemConfig/SystemConfigPage';
+import TicketsPage from '@components/pages/Tickets/TicketsPage';
 import TicketsDetailPage from '@components/pages/Tickets/TicketsDetailPage';
 import TicketsCreatePage from '@components/pages/Tickets/TicketsCreatePage';
+import UsersPage from '@components/pages/Users/UsersPage';
+import UsersDetailPage from '@components/pages/Users/UsersDetailPage';
+
+function useAuthValidator() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const token = getCookie('token');
+    const isLoggedIn = !!token;
+
+    if (isLoggedIn && location.pathname === '/login') {
+      navigate('/dashboard');
+    } else if (!isLoggedIn && location.pathname !== '/login') {
+      navigate('/login');
+    }
+  }, [location, navigate]);
+}
 
 export default function App() {
+  useAuthValidator();
+
   return (
     <div className='app'>
       <Routes>
-      <Route path='/' element={<HomeLayout pageComponent={<DashboardPage />} />} />
+        <Route path='/' element={<HomeLayout pageComponent={<DashboardPage />} />} />
         <Route path='/login' element={<LoginLayout pageComponent={<LoginPage />} />} />
         <Route path='/dashboard' element={<HomeLayout pageComponent={<DashboardPage />} />} />
         <Route path='/news' element={<HomeLayout pageComponent={<NewsPage />} />} />
@@ -39,4 +59,3 @@ export default function App() {
     </div>
   );
 }
-

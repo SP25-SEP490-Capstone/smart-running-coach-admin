@@ -7,6 +7,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import Person2Icon from '@mui/icons-material/Person2';
 //@ts-ignore
 import avatarJpg from '@assets/avatar.jpg'
+import { deleteCookie } from '@components/utils/util_cookie';
 
 export default function Navbar() {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -20,8 +21,9 @@ export default function Navbar() {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     handleClose()
+    deleteCookie('token')
     window.location.href = '/login'
   }
 
