@@ -1,19 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box, Button, Chip, IconButton, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, TextField, MenuItem, InputLabel, FormControl,
-  Paper, TablePagination, TableSortLabel, Menu, InputAdornment
+  Paper, TablePagination, TableSortLabel, Menu, InputAdornment, CircularProgress,
 } from "@mui/material";
 import { Edit, Delete, FilterList, Search, Event } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import "./NewsPage.scss";
 import { Link } from "react-router-dom";
 import CommonDialog from "@components/commons/CommonDialog";
+import { aget, adelete } from "@components/utils/util_axios"; // Import adelete
+import loading_icon from "@assets/loading_icon.gif";
 
-const articles = [
-  { title: "The Future of Artificial Intelligence in Modern Healthcare", status: "Released", date: "2/15/2024", tag: "Official" },
-  { title: "Sustainable Energy Solutions for Urban Development", status: "Draft", date: "2/13/2024", tag: "Event" },
-];
+interface Article {
+  id: string;
+  title: string;
+  status: string; // "Released" or "Draft"
+  date: string; // Formatted date
+  tag: string; // News type
+}
+
+interface NewsType {
+  id: string;
+  type_name: string;
+  description: string;
+}
 
 export default function NewsPage() {
   const [search, setSearch] = useState("");
@@ -27,7 +38,45 @@ export default function NewsPage() {
   const [statusAnchorEl, setStatusAnchorEl] = useState<null | HTMLElement>(null);
   const [dateAnchorEl, setDateAnchorEl] = useState<null | HTMLElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<number | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<{ id: string; index: number } | null>(null);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [newsTypes, setNewsTypes] = useState<NewsType[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch news types first
+        const newsTypesResponse = await aget("/news/types");
+        setNewsTypes(newsTypesResponse.data.data);
+
+        // Fetch articles after news types are available
+        const articlesResponse = await aget("/news");
+        const fetchedArticles = articlesResponse.data.data.map((article: any) => {
+          const newsType = newsTypesResponse.data.data.find((type: NewsType) => type.id === article.news_type_id);
+          return {
+            id: article.id,
+            title: article.title,
+            status: article.is_draft ? "Draft" : "Released",
+            date: new Date(article.created_at).toLocaleDateString(),
+            tag: newsType ? capitalizeFirstLetter(newsType.type_name) : "Unknown",
+          };
+        });
+        setArticles(fetchedArticles);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Function to capitalize the first letter of a string
+  const capitalizeFirstLetter = (string: string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
 
   const handleSort = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -60,17 +109,29 @@ export default function NewsPage() {
     setDateAnchorEl(null);
   };
 
-  const handleDeleteClick = (index: number) => {
-    setSelectedArticle(index);
+  const handleDeleteClick = (id: string, index: number) => {
+    setSelectedArticle({ id, index }); // Store the article ID and index
     setDialogOpen(true);
   };
 
   const handleDeleteConfirm = () => {
-    if (selectedArticle !== null) {
-      articles.splice(selectedArticle, 1);
+    if (selectedArticle) {
+      const { id, index } = selectedArticle;
+
+      // Call the delete API
+      adelete(`/news/${id}`)
+        .then(() => {
+          console.log("Article deleted successfully");
+          fetchArticles(); // Refresh the articles list
+        })
+        .catch((error) => {
+          console.error("Failed to delete article:", error);
+        })
+        .finally(() => {
+          setDialogOpen(false);
+          setSelectedArticle(null);
+        });
     }
-    setDialogOpen(false);
-    setSelectedArticle(null);
   };
 
   const filteredArticles = articles
@@ -87,6 +148,14 @@ export default function NewsPage() {
         return a[orderBy] < b[orderBy] ? 1 : -1;
       }
     });
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <img src={loading_icon} alt="Loading..." />
+      </Box>
+    );
+  }
 
   return (
     <Box className="news-container">
@@ -206,10 +275,10 @@ export default function NewsPage() {
                     <Chip label={article.tag} variant="outlined" />
                   </TableCell>
                   <TableCell>
-                    <IconButton color="primary" component={Link} to={`/news/edit/1`}>
+                    <IconButton color="primary" component={Link} to={`/news/edit/${article.id}`}>
                       <Edit />
                     </IconButton>
-                    <IconButton color="error" onClick={() => handleDeleteClick(index)}>
+                    <IconButton color="error" onClick={() => handleDeleteClick(article.id, index)}>
                       <Delete />
                     </IconButton>
                   </TableCell>
@@ -234,7 +303,7 @@ export default function NewsPage() {
         onConfirm={handleDeleteConfirm}
         title="Delete Article"
         description="Are you sure you want to delete this article?"
-        children={<Box sx={{padding: 2}}>
+        children={<Box sx={{ padding: 2 }}>
           <p>Do you wish to delete this?</p>
         </Box>}
         footer={<Button variant='contained' color="error" onClick={handleDeleteConfirm}>Delete</Button>}

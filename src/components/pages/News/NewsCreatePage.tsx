@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   TextField,
-  Checkbox,
-  FormControlLabel,
   Button,
   Select,
   MenuItem,
   Avatar,
+  CircularProgress,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import './NewsCreatePage.scss';
 import CommonBreadcrumb from '@components/commons/CommonBreadcrumb';
 import CommonTextEditor from '@components/commons/CommonTextEditor';
 import CommonDialog from '@components/commons/CommonDialog';
+import { aget, apost } from '@components/utils/util_axios';
+import loading_icon from '@assets/loading_icon.gif';
+import { sendErrorToast, sendSuccessToast } from '@components/utils/util_toastify';
 
 const templateContents = [
   { name: 'Template 1', content: 'Template 1 Content' },
@@ -20,29 +23,82 @@ const templateContents = [
   { name: 'Template 3', content: 'Template 3 Content' },
 ];
 
+interface NewsType {
+  id: string;
+  type_name: string;
+  description: string;
+}
+
 export default function NewsCreatePage() {
   const [title, setTitle] = useState('');
-  const [tags, setTags] = useState('Official'); // Default tag
+  const [tags, setTags] = useState<NewsType | null>(null);
   const [content, setContent] = useState('');
-  const [useTemplate, setUseTemplate] = useState(false);
-  const [notes, setNotes] = useState({
-    newsArticles: false,
-    tickets: true,
-    systemConfig: true,
-  });
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [newsTypes, setNewsTypes] = useState<NewsType[]>([]);
+  const [loading, setLoading] = useState(true); // Add loading state
+  const navigate = useNavigate();
 
-  const handleSubmit = () => {
-    // Handle submission logic for creating a new article
-    console.log({ title, tags, content, useTemplate, notes });
+  useEffect(() => {
+    // Fetch news types from /news/types
+    aget('/news/types')
+      .then(response => {
+        setNewsTypes(response.data.data);
+        setTags(response.data.data[0]); // Set the default tag to the first news type
+        setLoading(false); // Set loading to false after data is fetched
+      })
+      .catch(error => {
+        console.error('Failed to fetch news types:', error);
+        setLoading(false); // Set loading to false even if there's an error
+      });
+  }, []);
+
+  const handleSubmit = (isDraft: boolean) => {
+    if (!tags) {
+      console.error('No tag selected');
+      return;
+    }
+
+    const requestBody = {
+      newsTypeId: tags.id,
+      title,
+      content,
+      isDraft,
+      archive: false,
+    };
+
+    apost('/news', requestBody)
+      .then(response => {
+        if (response.status !== 201) {
+          sendErrorToast('Failed to create news');
+          return
+        }
+        sendSuccessToast('News created successfully!');
+        navigate('/news');
+      })
+      .catch(error => {
+        console.error('Failed to create news:', error);
+      });
   };
 
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
-    setContent(template.content); // Set the selected template content to content
-    setTemplateDialogOpen(false); // Close the dialog
+    setContent(template.content);
+    setTemplateDialogOpen(false);
   };
+
+  // Function to capitalize the first letter of a string
+  const capitalizeFirstLetter = (string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <img src={loading_icon} className="loading-icon" alt="Loading..." />
+      </Box>
+    );
+  }
 
   return (
     <Box className="news-create-page">
@@ -53,21 +109,24 @@ export default function NewsCreatePage() {
         ]}
       />
       <Box className="news-container">
-        {/* Title and Tags in one row */}
         <Box className="form-group form-group-meta">
           <Box className="form-field">
             <label>Tags</label>
             <Select
               className='form-field-tag'
               fullWidth
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
+              value={tags?.id || ''}
+              onChange={(e) => {
+                const selectedType = newsTypes.find(type => type.id === e.target.value);
+                setTags(selectedType || null);
+              }}
               margin="normal"
             >
-              <MenuItem value="Official">Official</MenuItem>
-              <MenuItem value="Important">Important</MenuItem>
-              <MenuItem value="Event">Event</MenuItem>
-              <MenuItem value="Miscellaneous">Miscellaneous</MenuItem>
+              {newsTypes.map((type) => (
+                <MenuItem key={type.id} value={type.id}>
+                  {capitalizeFirstLetter(type.type_name)} {/* Capitalize the first letter */}
+                </MenuItem>
+              ))}
             </Select>
           </Box>
           <Box className="form-field">
@@ -96,7 +155,7 @@ export default function NewsCreatePage() {
             </Button>
           </div>
 
-          <CommonTextEditor defaultValue={content} maxLimit={2000} />
+          <CommonTextEditor defaultValue={content} maxLimit={2000} onChange={setContent} />
         </Box>
 
         {/* Template Selection Dialog */}
@@ -132,7 +191,7 @@ export default function NewsCreatePage() {
             <Button
               variant="contained"
               color="primary"
-              onClick={handleSubmit}
+              onClick={() => handleSubmit(true)}
               className="btn-draft"
             >
               Save as draft
@@ -140,7 +199,7 @@ export default function NewsCreatePage() {
             <Button
               variant="contained"
               color="primary"
-              onClick={handleSubmit}
+              onClick={() => handleSubmit(false)}
               className="btn-submit"
             >
               Create News

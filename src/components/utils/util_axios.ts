@@ -11,7 +11,7 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
-  const token = getCookie("e_token");
+  const token = getCookie("token");
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -68,7 +68,7 @@ export const adelete = async (path: string): Promise<any> => {
   }
 };
 
-export const aupdate = async (path: string, data?: any): Promise<any> => {
+export const aput = async (path: string, data?: any): Promise<any> => {
   try {
     const response = await axiosInstance.put(path, data);
     return response;
