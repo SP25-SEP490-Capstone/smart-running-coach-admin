@@ -1,7 +1,18 @@
+// @components/commons/CommonTextEditor.tsx
 import { useEffect, useRef, useState } from "react";
 import "./CommonTextEditor.scss";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
+import { Box, Typography } from "@mui/material";
+
+interface CommonTextEditorProps {
+  defaultValue?: string;
+  height?: string;
+  maxLimit?: number;
+  onChange?: (content: string) => void;
+  error?: boolean;
+  helperText?: string;
+}
 
 const fontSizeArr = [
   "8px",
@@ -17,20 +28,27 @@ const fontSizeArr = [
 ];
 
 export default function CommonTextEditor({
-  ref = useRef(),
   defaultValue = "",
-  height = "250px",
+  height = "300px",
   maxLimit = 2000,
-  ...props
-}) {
+  onChange,
+  error = false,
+  helperText = "",
+}: CommonTextEditorProps) {
+  const editorRef = useRef<HTMLDivElement>(null);
+  const quillRef = useRef<Quill | null>(null);
   const [charCount, setCharCount] = useState(0);
 
   useEffect(() => {
-    var Size = Quill.import("attributors/style/size");
+    if (!editorRef.current) return;
+
+    // Register custom font sizes
+    const Size = Quill.import("attributors/style/size");
     Size.whitelist = fontSizeArr;
     Quill.register(Size, true);
 
-    const quill = new Quill(ref.current, {
+    // Initialize Quill editor
+    const quill = new Quill(editorRef.current, {
       modules: {
         toolbar: [
           [{ header: [1, 2, false] }],
@@ -43,33 +61,47 @@ export default function CommonTextEditor({
       theme: "snow",
     });
 
-    // Set default font size to 12px
-    const defaultFontSize = "12px";
-    quill.format("size", defaultFontSize);
+    // Set default font size
+    quill.format("size", "12px");
 
-    quill.setText(defaultValue);
+    // Set initial content
+    if (defaultValue) {
+      quill.clipboard.dangerouslyPasteHTML(defaultValue);
+    }
 
+    // Handle text changes
     quill.on("text-change", () => {
-      setCharCount(quill.getText().trim().length);
+      const text = quill.getText().trim();
+      const html = quill.root.innerHTML;
+      setCharCount(text.length);
+      onChange?.(html);
     });
+
+    quillRef.current = quill;
 
     return () => {
       quill.off("text-change");
-      quill.deleteText(0, quill.getLength());
-      ref.current = null;
     };
-  }, [defaultValue]);
+  }, []);
 
   const isLimitReached = charCount >= maxLimit;
 
   return (
-    <div className="common-text-editor">
-      <div ref={ref}>{props.children}</div>
-      <div
-        className={`character-count ${isLimitReached ? "limit-reached" : ""}`}
+    <Box sx={{ width: "100%" }}>
+      <div 
+        className="common-text-editor" 
+        style={{ height, border: error ? "1px solid #d32f2f" : "1px solid #ccc" }}
       >
-        {charCount}/{maxLimit}
+        <div ref={editorRef} />
+        <div className={`character-count ${isLimitReached ? "limit-reached" : ""}`}>
+          {charCount}/{maxLimit}
+        </div>
       </div>
-    </div>
+      {helperText && (
+        <Typography variant="caption" color={error ? "error" : "textSecondary"}>
+          {helperText}
+        </Typography>
+      )}
+    </Box>
   );
 }

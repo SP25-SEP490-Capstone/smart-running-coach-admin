@@ -3,21 +3,28 @@ import {
   Box, Button, Chip, IconButton, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, TextField, MenuItem, InputLabel, FormControl,
   Paper, TablePagination, TableSortLabel, Menu, InputAdornment, CircularProgress,
+  Typography, Tooltip
 } from "@mui/material";
 import { Edit, Delete, FilterList, Search, Event } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import "./NewsPage.scss";
 import { Link } from "react-router-dom";
 import CommonDialog from "@components/commons/CommonDialog";
-import { aget, adelete } from "@components/utils/util_axios"; // Import adelete
-import loading_icon from "@assets/loading_icon.gif";
+import { aget, adelete } from "@components/utils/util_axios";
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 interface Article {
   id: string;
   title: string;
-  status: string; // "Released" or "Draft"
-  date: string; // Formatted date
-  tag: string; // News type
+  content: string;
+  status: "Draft" | "Published" | "Archived";
+  date: string;
+  tag: string;
+  news_type_id: string;
+  is_draft: boolean;
+  archive: boolean;
+  created_at: string;
 }
 
 interface NewsType {
@@ -26,9 +33,18 @@ interface NewsType {
   description: string;
 }
 
+// Function to remove HTML tags and truncate text
+const stripHtmlAndTruncate = (html: string, maxLength: number = 100) => {
+  if (!html) return '';
+  const stripped = html.replace(/<[^>]*>?/gm, '');
+  return stripped.length > maxLength 
+    ? stripped.substring(0, maxLength) + '...' 
+    : stripped;
+};
+
 export default function NewsPage() {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"All" | "Draft" | "Published" | "Archived">("All");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [page, setPage] = useState(0);
@@ -38,44 +54,54 @@ export default function NewsPage() {
   const [statusAnchorEl, setStatusAnchorEl] = useState<null | HTMLElement>(null);
   const [dateAnchorEl, setDateAnchorEl] = useState<null | HTMLElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<{ id: string; index: number } | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [newsTypes, setNewsTypes] = useState<NewsType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchNewsData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch news types
+      const typesResponse = await aget("/news/types");
+      setNewsTypes(typesResponse.data.data);
+
+      // Fetch articles for admin (includes drafts and archived)
+      const articlesResponse = await aget("/news/admin/all");
+      const formattedArticles = articlesResponse.data.data.map((article: any) => ({
+        ...article,
+        status: article.archive ? "Archived" : article.is_draft ? "Draft" : "Published",
+        date: new Date(article.created_at).toLocaleDateString(),
+        tag: typesResponse.data.data.find((type: NewsType) => type.id === article.news_type_id)?.type_name || "Unknown",
+      }));
+      
+      setArticles(formattedArticles);
+    } catch (err) {
+      console.error("Failed to fetch news data:", err);
+      setError("Failed to load news data. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch news types first
-        const newsTypesResponse = await aget("/news/types");
-        setNewsTypes(newsTypesResponse.data.data);
-
-        // Fetch articles after news types are available
-        const articlesResponse = await aget("/news");
-        const fetchedArticles = articlesResponse.data.data.map((article: any) => {
-          const newsType = newsTypesResponse.data.data.find((type: NewsType) => type.id === article.news_type_id);
-          return {
-            id: article.id,
-            title: article.title,
-            status: article.is_draft ? "Draft" : "Released",
-            date: new Date(article.created_at).toLocaleDateString(),
-            tag: newsType ? capitalizeFirstLetter(newsType.type_name) : "Unknown",
-          };
-        });
-        setArticles(fetchedArticles);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchNewsData();
   }, []);
 
-  // Function to capitalize the first letter of a string
-  const capitalizeFirstLetter = (string: string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+  const handleDeleteArticle = async () => {
+    if (!selectedArticle) return;
+    
+    try {
+      await adelete(`/news/admin/${selectedArticle.id}`);
+      await fetchNewsData(); // Refresh the list
+      setDialogOpen(false);
+    } catch (err) {
+      console.error("Failed to delete article:", err);
+      setError("Failed to delete article. Please try again.");
+    }
   };
 
   const handleSort = (property: string) => {
@@ -84,75 +110,111 @@ export default function NewsPage() {
     setOrderBy(property);
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleStatusClick = (event: React.MouseEvent<HTMLElement>) => {
-    setStatusAnchorEl(event.currentTarget);
-  };
-
-  const handleStatusClose = () => {
+  const handleStatusFilter = (status: "All" | "Draft" | "Published" | "Archived") => {
+    setStatusFilter(status);
     setStatusAnchorEl(null);
   };
 
-  const handleDateClick = (event: React.MouseEvent<HTMLElement>) => {
-    setDateAnchorEl(event.currentTarget);
-  };
-
-  const handleDateClose = () => {
-    setDateAnchorEl(null);
-  };
-
-  const handleDeleteClick = (id: string, index: number) => {
-    setSelectedArticle({ id, index }); // Store the article ID and index
-    setDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (selectedArticle) {
-      const { id, index } = selectedArticle;
-
-      // Call the delete API
-      adelete(`/news/${id}`)
-        .then(() => {
-          console.log("Article deleted successfully");
-          fetchArticles(); // Refresh the articles list
-        })
-        .catch((error) => {
-          console.error("Failed to delete article:", error);
-        })
-        .finally(() => {
-          setDialogOpen(false);
-          setSelectedArticle(null);
-        });
-    }
-  };
-
   const filteredArticles = articles
-    .filter((article) => article.title.toLowerCase().includes(search.toLowerCase()))
-    .filter((article) => status === "" || article.status === status)
-    .filter((article) => {
-      const articleDate = new Date(article.date);
-      return (!startDate || articleDate >= startDate) && (!endDate || articleDate <= endDate);
+    .filter(article => 
+      article.title.toLowerCase().includes(search.toLowerCase()) ||
+      article.content.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter(article => {
+      if (statusFilter === "All") return true;
+      if (statusFilter === "Draft") return article.is_draft && !article.archive;
+      if (statusFilter === "Published") return !article.is_draft && !article.archive;
+      if (statusFilter === "Archived") return article.archive;
+      return true;
+    })
+    .filter(article => {
+      if (!startDate && !endDate) return true;
+      const articleDate = new Date(article.created_at);
+      return (
+        (!startDate || articleDate >= startDate) && 
+        (!endDate || articleDate <= endDate)
+      );
     })
     .sort((a, b) => {
+      const aValue = a[orderBy as keyof Article];
+      const bValue = b[orderBy as keyof Article];
+      
       if (order === "asc") {
-        return a[orderBy] > b[orderBy] ? 1 : -1;
+        return aValue > bValue ? 1 : -1;
       } else {
-        return a[orderBy] < b[orderBy] ? 1 : -1;
+        return aValue < bValue ? 1 : -1;
       }
     });
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Published": return "success";
+      case "Draft": return "warning";
+      case "Archived": return "error";
+      default: return "default";
+    }
+  };
+
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-        <img src={loading_icon} alt="Loading..." />
+      <Box className="news-container">
+        <div className='title-container'>
+          <h1>News Management</h1>
+        </div>
+        <Box className="news-filters">
+          <Box>
+            <Skeleton width={200} height={40} style={{ marginRight: 16 }} />
+            <Skeleton width={40} height={40} circle style={{ marginRight: 16 }} />
+            <Skeleton width={40} height={40} circle />
+          </Box>
+          <Skeleton width={180} height={40} />
+        </Box>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                {['Title', 'Content Preview', 'Status', 'Date Created', 'Type', 'Actions'].map((header) => (
+                  <TableCell key={header}>
+                    <Skeleton width={100} />
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell><Skeleton /></TableCell>
+                  <TableCell><Skeleton /></TableCell>
+                  <TableCell><Skeleton width={80} /></TableCell>
+                  <TableCell><Skeleton width={100} /></TableCell>
+                  <TableCell><Skeleton width={60} /></TableCell>
+                  <TableCell>
+                    <Skeleton width={80} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <Box p={2}>
+            <Skeleton width={300} height={40} />
+          </Box>
+        </TableContainer>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box className="news-container">
+        <div className='title-container'>
+          <h1>News Management</h1>
+          <Box color="error.main" p={2}>
+            {error}
+          </Box>
+          <Button variant="contained" onClick={fetchNewsData}>
+            Retry
+          </Button>
+        </div>
       </Box>
     );
   }
@@ -160,8 +222,9 @@ export default function NewsPage() {
   return (
     <Box className="news-container">
       <div className='title-container'>
-        <h1>News</h1>
+        <h1>News Management</h1>
       </div>
+      
       <Box className="news-filters">
         <Box>
           <TextField
@@ -179,38 +242,43 @@ export default function NewsPage() {
               ),
             }}
           />
-          <IconButton onClick={handleStatusClick}>
+          
+          <IconButton onClick={(e) => setStatusAnchorEl(e.currentTarget)}>
             <FilterList />
           </IconButton>
+          
           <Menu
             anchorEl={statusAnchorEl}
             open={Boolean(statusAnchorEl)}
-            onClose={handleStatusClose}
+            onClose={() => setStatusAnchorEl(null)}
           >
-            <MenuItem onClick={() => setStatus("")}>All Status</MenuItem>
-            <MenuItem onClick={() => setStatus("Released")}>Released</MenuItem>
-            <MenuItem onClick={() => setStatus("Draft")}>Draft</MenuItem>
+            <MenuItem onClick={() => handleStatusFilter("All")}>All Status</MenuItem>
+            <MenuItem onClick={() => handleStatusFilter("Published")}>Published</MenuItem>
+            <MenuItem onClick={() => handleStatusFilter("Draft")}>Draft</MenuItem>
+            <MenuItem onClick={() => handleStatusFilter("Archived")}>Archived</MenuItem>
           </Menu>
-          <IconButton onClick={handleDateClick}>
+          
+          <IconButton onClick={(e) => setDateAnchorEl(e.currentTarget)}>
             <Event />
           </IconButton>
+          
           <Menu
             anchorEl={dateAnchorEl}
             open={Boolean(dateAnchorEl)}
-            onClose={handleDateClose}
+            onClose={() => setDateAnchorEl(null)}
           >
             <Box className='news-page-filter-date' p={2}>
               <DatePicker
                 label="Start Date"
                 value={startDate}
-                onChange={(newValue) => setStartDate(newValue)}
-                renderInput={(params) => <TextField {...params} size="small" fullWidth />}
+                onChange={setStartDate}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
               <DatePicker
                 label="End Date"
                 value={endDate}
-                onChange={(newValue) => setEndDate(newValue)}
-                renderInput={(params) => <TextField {...params} size="small" fullWidth />}
+                onChange={setEndDate}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
             </Box>
           </Menu>
@@ -226,6 +294,7 @@ export default function NewsPage() {
           + Create New Article
         </Button>
       </Box>
+      
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -239,6 +308,7 @@ export default function NewsPage() {
                   Title
                 </TableSortLabel>
               </TableCell>
+              <TableCell>Content Preview</TableCell>
               <TableCell>
                 <TableSortLabel
                   active={orderBy === "status"}
@@ -250,63 +320,110 @@ export default function NewsPage() {
               </TableCell>
               <TableCell>
                 <TableSortLabel
-                  active={orderBy === "date"}
-                  direction={orderBy === "date" ? order : "asc"}
-                  onClick={() => handleSort("date")}
+                  active={orderBy === "created_at"}
+                  direction={orderBy === "created_at" ? order : "asc"}
+                  onClick={() => handleSort("created_at")}
                 >
                   Date Created
                 </TableSortLabel>
               </TableCell>
-              <TableCell>Tags</TableCell>
+              <TableCell>Type</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredArticles
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((article, index) => (
-                <TableRow key={index}>
-                  <TableCell className="news-title">{article.title}</TableCell>
-                  <TableCell>
-                    <Chip label={article.status} color={article.status === "Released" ? "success" : "default"} />
-                  </TableCell>
-                  <TableCell>{article.date}</TableCell>
-                  <TableCell>
-                    <Chip label={article.tag} variant="outlined" />
-                  </TableCell>
-                  <TableCell>
-                    <IconButton color="primary" component={Link} to={`/news/edit/${article.id}`}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton color="error" onClick={() => handleDeleteClick(article.id, index)}>
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+            {filteredArticles.length > 0 ? (
+              filteredArticles
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((article) => (
+                  <TableRow key={article.id}>
+                    <TableCell className="news-title">
+                      {article.title}
+                      {article.archive && <span style={{ color: '#999', marginLeft: '8px' }}>(Archived)</span>}
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title={stripHtmlAndTruncate(article.content, 200)} arrow>
+                        <Typography variant="body2" noWrap>
+                          {stripHtmlAndTruncate(article.content, 60)}
+                        </Typography>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={article.status} 
+                        color={getStatusColor(article.status)} 
+                      />
+                    </TableCell>
+                    <TableCell>{article.date}</TableCell>
+                    <TableCell>
+                      <Chip label={article.tag} variant="outlined" />
+                    </TableCell>
+                    <TableCell>
+                      <IconButton 
+                        color="primary" 
+                        component={Link} 
+                        to={`/news/edit/${article.id}`}
+                        disabled={article.archive}
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton 
+                        color="error" 
+                        onClick={() => {
+                          setSelectedArticle(article);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  No articles found
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
+        
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
           count={filteredArticles.length}
           rowsPerPage={rowsPerPage}
           page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
+          onPageChange={(_, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
         />
       </TableContainer>
+      
       <CommonDialog
         open={dialogOpen}
         maxWidth='sm'
         onClose={() => setDialogOpen(false)}
-        onConfirm={handleDeleteConfirm}
+        onConfirm={handleDeleteArticle}
         title="Delete Article"
-        description="Are you sure you want to delete this article?"
-        children={<Box sx={{ padding: 2 }}>
-          <p>Do you wish to delete this?</p>
-        </Box>}
-        footer={<Button variant='contained' color="error" onClick={handleDeleteConfirm}>Delete</Button>}
+        description={`Are you sure you want to delete "${selectedArticle?.title}"?`}
+        children={
+          <div style={{padding: '20px'}}>
+            <p>Are you sure you want to delete "{selectedArticle?.title}"?</p>
+            <p style={{color: 'red'}}>You cannot undo this action.</p>
+          </div>
+        }
+        footer={
+          <>
+            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant='contained' color="error" onClick={handleDeleteArticle}>
+              Delete
+            </Button>
+          </>
+        }
       />
     </Box>
   );
