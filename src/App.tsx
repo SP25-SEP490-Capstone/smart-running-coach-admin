@@ -1,4 +1,4 @@
-import { getCookie } from '@components/utils/util_cookie';
+import { deleteCookie, getCookie, setCookie } from '@components/utils/util_cookie';
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Route, Routes } from 'react-router-dom';
@@ -18,21 +18,50 @@ import TicketsDetailPage from '@components/pages/Tickets/TicketsDetailPage';
 import TicketsCreatePage from '@components/pages/Tickets/TicketsCreatePage';
 import UsersPage from '@components/pages/Users/UsersPage';
 import UsersDetailPage from '@components/pages/Users/UsersDetailPage';
+import { useAtom } from 'jotai';
+import { userAtom } from '@components/atoms/userAtom';
+import { aget } from '@components/utils/util_axios';
 
 function useAuthValidator() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [_, setUser] = useAtom(userAtom);
 
   useEffect(() => {
-    const token = getCookie('token');
-    const isLoggedIn = !!token;
+    const validateAuth = async () => {
+      const token = getCookie('token');
+      const isLoggedIn = !!token;
 
-    if (isLoggedIn && location.pathname === '/login') {
-      navigate('/dashboard');
-    } else if (!isLoggedIn && location.pathname !== '/login') {
-      navigate('/login');
-    }
-  }, [location, navigate]);
+      // Redirect rules
+      if (isLoggedIn && location.pathname === '/login') {
+        navigate('/dashboard');
+        return;
+      } 
+      
+      if (!isLoggedIn && location.pathname !== '/login') {
+        navigate('/login');
+        return;
+      }
+
+      if (isLoggedIn) {
+        try {
+          const response = await aget('/admins/me');
+
+          if (response.data?.status === 'success') {
+            setUser(response.data.data);
+          } else {
+            throw new Error('Invalid response format');
+          }
+        } catch (error) {
+          deleteCookie('token');
+          setUser(null);
+          navigate('/login');
+        }
+      }
+    };
+
+    validateAuth();
+  }, [location, navigate, setUser]);
 }
 
 export default function App() {

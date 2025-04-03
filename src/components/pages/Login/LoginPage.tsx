@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load the email from localStorage when the component mounts
   useEffect(() => {
     const savedEmail = localStorage.getItem('savedEmail');
     if (savedEmail) {
@@ -21,7 +20,6 @@ export default function LoginPage() {
     }
   }, []);
 
-  // Save the email to localStorage whenever it changes
   useEffect(() => {
     if (email) {
       localStorage.setItem('savedEmail', email);
@@ -41,9 +39,7 @@ export default function LoginPage() {
           } else {
             setCookie('token', data.data.accessToken, 30);
             sendSuccessToast(data.message);
-            setTimeout(() => {
-              window.location.href = '/dashboard';
-            }, 2000);
+            window.location.href = '/dashboard';
           }
         }
       })
@@ -67,10 +63,10 @@ export default function LoginPage() {
         <p>Please fill your details to access your account.</p>
 
         <form onSubmit={(e) => { e.preventDefault(); login(); }}>
-          <label>Email</label>
+          <label>Email or username</label>
           <div className='input-container'>
             <input
-              type='email'
+              type='text'
               placeholder='youremail@example.com'
               value={email}
               onChange={(e) => setEmail(e.target.value)}
