@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -11,14 +11,17 @@ import {
   TextField,
   Button,
   IconButton,
-  Tooltip
-} from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
-import './SystemConfigPage.scss';
-import { sendSuccessToast, sendErrorToast } from '@components/utils/util_toastify';
-import { aget } from '@components/utils/util_axios';
+  Tooltip,
+} from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import "./SystemConfigPage.scss";
+import {
+  sendSuccessToast,
+  sendErrorToast,
+} from "@components/utils/util_toastify";
+import { aget } from "@components/utils/util_axios";
 
 interface SystemStats {
   cpu: {
@@ -71,18 +74,18 @@ interface SystemStats {
 
 export default function SystemConfigPage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [backupMessage, setBackupMessage] = useState('');
+  const [backupMessage, setBackupMessage] = useState("");
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchSystemStats = async () => {
     try {
-      const response = await aget('/system-stats');
+      const response = await aget("/system-stats");
       setSystemStats(response.data);
     } catch (error) {
-      console.error('Error fetching system stats:', error);
-      sendErrorToast('Failed to fetch system stats');
+      console.error("Error fetching system stats:", error);
+      sendErrorToast("Failed to fetch system stats");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -98,21 +101,28 @@ export default function SystemConfigPage() {
     fetchSystemStats();
   };
 
-  const handleMaintenanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMaintenanceChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setMaintenanceMode(event.target.checked);
   };
 
-  const handleBackupMessageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBackupMessageChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setBackupMessage(event.target.value);
   };
 
   const handleSaveMaintenance = async () => {
     try {
-      await aget('/system-stats/maintenance', { enabled: maintenanceMode, message: backupMessage });
-      sendSuccessToast('Maintenance settings saved!');
+      await aget("/system-stats/maintenance", {
+        enabled: maintenanceMode,
+        message: backupMessage,
+      });
+      sendSuccessToast("Maintenance settings saved!");
     } catch (error) {
-      console.error('Error saving maintenance settings:', error);
-      sendErrorToast('Failed to save maintenance settings');
+      console.error("Error saving maintenance settings:", error);
+      sendErrorToast("Failed to save maintenance settings");
     }
   };
 
@@ -123,10 +133,14 @@ export default function SystemConfigPage() {
 
   const getHealthStatusColor = (status: string) => {
     switch (status) {
-      case 'optimal': return '#2e7d32';
-      case 'warning': return '#ed6c02';
-      case 'critical': return '#d32f2f';
-      default: return '#2e7d32';
+      case "optimal":
+        return "#2e7d32";
+      case "warning":
+        return "#ed6c02";
+      case "critical":
+        return "#d32f2f";
+      default:
+        return "#2e7d32";
     }
   };
 
@@ -144,14 +158,28 @@ export default function SystemConfigPage() {
             <Card className="info-card cpu">
               <CardContent>
                 <Skeleton width={100} height={30} />
-                <Skeleton width={200} height={20} />
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="info-detail">
-                    <Skeleton width={80} />
-                    <Skeleton width={60} />
-                  </div>
-                ))}
-                <Skeleton height={8} />
+                <Skeleton
+                  width={200}
+                  height={20}
+                  style={{ marginBottom: "1rem" }}
+                />
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={60} />
+                </div>
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={60} />
+                </div>
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={60} />
+                </div>
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={60} />
+                </div>
+                <Skeleton height={8} style={{ marginTop: "1rem" }} />
               </CardContent>
             </Card>
           </Grid>
@@ -161,14 +189,24 @@ export default function SystemConfigPage() {
             <Card className="info-card memory">
               <CardContent>
                 <Skeleton width={100} height={30} />
-                <Skeleton width={200} height={20} />
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="info-detail">
-                    <Skeleton width={80} />
-                    <Skeleton width={60} />
-                  </div>
-                ))}
-                <Skeleton height={8} />
+                <Skeleton
+                  width={200}
+                  height={20}
+                  style={{ marginBottom: "1rem" }}
+                />
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={60} />
+                </div>
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={60} />
+                </div>
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={60} />
+                </div>
+                <Skeleton height={8} style={{ marginTop: "1rem" }} />
               </CardContent>
             </Card>
           </Grid>
@@ -178,14 +216,24 @@ export default function SystemConfigPage() {
             <Card className="info-card storage">
               <CardContent>
                 <Skeleton width={100} height={30} />
-                <Skeleton width={200} height={20} />
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="info-detail">
-                    <Skeleton width={80} />
-                    <Skeleton width={60} />
-                  </div>
-                ))}
-                <Skeleton height={8} />
+                <Skeleton
+                  width={200}
+                  height={20}
+                  style={{ marginBottom: "1rem" }}
+                />
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={60} />
+                </div>
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={60} />
+                </div>
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={60} />
+                </div>
+                <Skeleton height={8} style={{ marginTop: "1rem" }} />
               </CardContent>
             </Card>
           </Grid>
@@ -195,13 +243,27 @@ export default function SystemConfigPage() {
             <Card className="info-card network">
               <CardContent>
                 <Skeleton width={100} height={30} />
-                <Skeleton width={200} height={20} />
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="info-detail">
-                    <Skeleton width={80} />
-                    <Skeleton width={120} />
-                  </div>
-                ))}
+                <Skeleton
+                  width={200}
+                  height={20}
+                  style={{ marginBottom: "1rem" }}
+                />
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={120} />
+                </div>
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={120} />
+                </div>
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={120} />
+                </div>
+                <div className="info-detail">
+                  <Skeleton width={80} />
+                  <Skeleton width={120} />
+                </div>
               </CardContent>
             </Card>
           </Grid>
@@ -212,9 +274,17 @@ export default function SystemConfigPage() {
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Skeleton width={200} height={30} />
+                <Skeleton
+                  width={200}
+                  height={30}
+                  style={{ marginBottom: "1.5rem" }}
+                />
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="info-detail">
+                  <div
+                    key={i}
+                    className="info-detail"
+                    style={{ margin: "0.75rem 0", padding: "0.5rem" }}
+                  >
                     <Skeleton width={100} />
                     <Skeleton width={180} />
                   </div>
@@ -226,9 +296,17 @@ export default function SystemConfigPage() {
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Skeleton width={200} height={30} />
+                <Skeleton
+                  width={200}
+                  height={30}
+                  style={{ marginBottom: "1.5rem" }}
+                />
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="info-detail">
+                  <div
+                    key={i}
+                    className="info-detail"
+                    style={{ margin: "0.75rem 0", padding: "0.5rem" }}
+                  >
                     <Skeleton width={100} />
                     <Skeleton width={180} />
                   </div>
@@ -243,10 +321,21 @@ export default function SystemConfigPage() {
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Skeleton width={200} height={30} />
-                <Skeleton width={200} height={50} />
-                <Skeleton height={80} />
-                <div className="action-buttons">
+                <Skeleton
+                  width={200}
+                  height={30}
+                  style={{ marginBottom: "1.5rem" }}
+                />
+                <Skeleton
+                  width={200}
+                  height={50}
+                  style={{ marginBottom: "1.5rem" }}
+                />
+                <Skeleton height={80} style={{ marginBottom: "1.5rem" }} />
+                <div
+                  className="action-buttons"
+                  style={{ display: "flex", gap: "1rem" }}
+                >
                   <Skeleton width={120} height={40} />
                   <Skeleton width={120} height={40} />
                 </div>
@@ -264,7 +353,7 @@ export default function SystemConfigPage() {
         <h1>System Configuration</h1>
         <Tooltip title="Refresh stats">
           <IconButton onClick={handleRefresh} disabled={refreshing}>
-            <RefreshIcon className={refreshing ? 'spin' : ''} />
+            <RefreshIcon className={refreshing ? "spin" : ""} />
           </IconButton>
         </Tooltip>
       </div>
@@ -274,11 +363,13 @@ export default function SystemConfigPage() {
         <Grid item xs={12} sm={6} md={3}>
           <Card className="info-card cpu">
             <CardContent>
-              <Typography variant="h6" className="card-title">CPU</Typography>
+              <Typography variant="h6" className="card-title">
+                CPU
+              </Typography>
               <Typography variant="body2" className="card-subtitle">
                 {systemStats?.cpu.manufacturer} {systemStats?.cpu.brand}
               </Typography>
-              
+
               <div className="info-detail">
                 <span>Current Load</span>
                 <span>{systemStats?.cpu.currentLoad.toFixed(1)}%</span>
@@ -289,17 +380,25 @@ export default function SystemConfigPage() {
               </div>
               <div className="info-detail">
                 <span>Cores/Threads</span>
-                <span>{systemStats?.cpu.physicalCores}/{systemStats?.cpu.cores}</span>
+                <span>
+                  {systemStats?.cpu.physicalCores}/{systemStats?.cpu.cores}
+                </span>
               </div>
               <div className="info-detail">
                 <span>Temperature</span>
-                <span>{systemStats?.cpu.temperature ? `${systemStats.cpu.temperature}°C` : 'N/A'}</span>
+                <span>
+                  {systemStats?.cpu.temperature
+                    ? `${systemStats.cpu.temperature}°C`
+                    : "N/A"}
+                </span>
               </div>
               <div className="progress-bar">
-                <LinearProgress 
-                  variant="determinate" 
-                  value={systemStats?.cpu.currentLoad} 
-                  color={systemStats?.cpu.currentLoad > 80 ? 'secondary' : 'primary'}
+                <LinearProgress
+                  variant="determinate"
+                  value={systemStats?.cpu.currentLoad}
+                  color={
+                    systemStats?.cpu.currentLoad > 80 ? "secondary" : "primary"
+                  }
                 />
               </div>
             </CardContent>
@@ -310,11 +409,14 @@ export default function SystemConfigPage() {
         <Grid item xs={12} sm={6} md={3}>
           <Card className="info-card memory">
             <CardContent>
-              <Typography variant="h6" className="card-title">Memory</Typography>
-              <Typography variant="body2" className="card-subtitle">
-                Usage: {systemStats?.memory.used} GB / {systemStats?.memory.total} GB
+              <Typography variant="h6" className="card-title">
+                Memory
               </Typography>
-              
+              <Typography variant="body2" className="card-subtitle">
+                Usage: {systemStats?.memory.used} GB /{" "}
+                {systemStats?.memory.total} GB
+              </Typography>
+
               <div className="info-detail">
                 <span>Type</span>
                 <span>{systemStats?.memory.type}</span>
@@ -328,10 +430,14 @@ export default function SystemConfigPage() {
                 <span>{systemStats?.memory.usage}%</span>
               </div>
               <div className="progress-bar">
-                <LinearProgress 
-                  variant="determinate" 
-                  value={parseFloat(systemStats?.memory.usage || '0')} 
-                  color={parseFloat(systemStats?.memory.usage || '0') > 85 ? 'secondary' : 'primary'}
+                <LinearProgress
+                  variant="determinate"
+                  value={parseFloat(systemStats?.memory.usage || "0")}
+                  color={
+                    parseFloat(systemStats?.memory.usage || "0") > 85
+                      ? "secondary"
+                      : "primary"
+                  }
                 />
               </div>
             </CardContent>
@@ -342,14 +448,19 @@ export default function SystemConfigPage() {
         <Grid item xs={12} sm={6} md={3}>
           <Card className="info-card storage">
             <CardContent>
-              <Typography variant="h6" className="card-title">Storage</Typography>
+              <Typography variant="h6" className="card-title">
+                Storage
+              </Typography>
               <Typography variant="body2" className="card-subtitle">
                 {systemStats?.storage.type}
               </Typography>
-              
+
               <div className="info-detail">
                 <span>Usage</span>
-                <span>{systemStats?.storage.used} GB / {systemStats?.storage.size} GB</span>
+                <span>
+                  {systemStats?.storage.used} GB / {systemStats?.storage.size}{" "}
+                  GB
+                </span>
               </div>
               <div className="info-detail">
                 <span>Free</span>
@@ -360,10 +471,14 @@ export default function SystemConfigPage() {
                 <span>{systemStats?.storage.usage}%</span>
               </div>
               <div className="progress-bar">
-                <LinearProgress 
-                  variant="determinate" 
-                  value={parseFloat(systemStats?.storage.usage || '0')} 
-                  color={parseFloat(systemStats?.storage.usage || '0') > 85 ? 'secondary' : 'primary'}
+                <LinearProgress
+                  variant="determinate"
+                  value={parseFloat(systemStats?.storage.usage || "0")}
+                  color={
+                    parseFloat(systemStats?.storage.usage || "0") > 85
+                      ? "secondary"
+                      : "primary"
+                  }
                 />
               </div>
             </CardContent>
@@ -374,11 +489,13 @@ export default function SystemConfigPage() {
         <Grid item xs={12} sm={6} md={3}>
           <Card className="info-card network">
             <CardContent>
-              <Typography variant="h6" className="card-title">Network</Typography>
+              <Typography variant="h6" className="card-title">
+                Network
+              </Typography>
               <Typography variant="body2" className="card-subtitle">
                 {systemStats?.network.interface}
               </Typography>
-              
+
               <div className="info-detail">
                 <span>Speed</span>
                 <span>{formatSpeed(systemStats?.network.speed || 0)}</span>
@@ -405,7 +522,9 @@ export default function SystemConfigPage() {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" className="stats-title">System Information</Typography>
+              <Typography variant="h6" className="stats-title">
+                System Information
+              </Typography>
               <div className="info-detail">
                 <span>OS</span>
                 <span>{systemStats?.os.distro}</span>
@@ -426,10 +545,6 @@ export default function SystemConfigPage() {
                 <span>Uptime</span>
                 <span>{systemStats?.os.uptime}</span>
               </div>
-              <div className="info-detail">
-                <span>Last Boot</span>
-                <span>{new Date(systemStats?.os.bootTime || '').toLocaleString()}</span>
-              </div>
             </CardContent>
           </Card>
         </Grid>
@@ -437,37 +552,69 @@ export default function SystemConfigPage() {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" className="stats-title">System Health</Typography>
+              <Typography variant="h6" className="stats-title">
+                System Health
+              </Typography>
               <div className="info-detail">
                 <span>Overall Status</span>
-                <span 
-                  className="status-text" 
-                  style={{ color: getHealthStatusColor(systemStats?.systemHealth.status || 'optimal') }}
+                <span
+                  className="status-text"
+                  style={{
+                    color: getHealthStatusColor(
+                      systemStats?.systemHealth.status || "optimal"
+                    ),
+                  }}
                 >
                   {systemStats?.systemHealth.status.toUpperCase()}
                 </span>
               </div>
               <div className="info-detail">
                 <span>CPU Health</span>
-                <span className={systemStats?.cpu.currentLoad > 80 ? 'status-text warning' : 'status-text optimal'}>
-                  {systemStats?.cpu.currentLoad > 80 ? 'High Load' : 'Normal'}
+                <span
+                  className={
+                    systemStats?.cpu.currentLoad > 80
+                      ? "status-text warning"
+                      : "status-text optimal"
+                  }
+                >
+                  {systemStats?.cpu.currentLoad > 80 ? "High Load" : "Normal"}
                 </span>
               </div>
               <div className="info-detail">
                 <span>Memory Health</span>
-                <span className={parseFloat(systemStats?.memory.usage || '0') > 85 ? 'status-text warning' : 'status-text optimal'}>
-                  {parseFloat(systemStats?.memory.usage || '0') > 85 ? 'High Usage' : 'Normal'}
+                <span
+                  className={
+                    parseFloat(systemStats?.memory.usage || "0") > 85
+                      ? "status-text warning"
+                      : "status-text optimal"
+                  }
+                >
+                  {parseFloat(systemStats?.memory.usage || "0") > 85
+                    ? "High Usage"
+                    : "Normal"}
                 </span>
               </div>
               <div className="info-detail">
                 <span>Storage Health</span>
-                <span className={parseFloat(systemStats?.storage.usage || '0') > 85 ? 'status-text warning' : 'status-text optimal'}>
-                  {parseFloat(systemStats?.storage.usage || '0') > 85 ? 'High Usage' : 'Normal'}
+                <span
+                  className={
+                    parseFloat(systemStats?.storage.usage || "0") > 85
+                      ? "status-text warning"
+                      : "status-text optimal"
+                  }
+                >
+                  {parseFloat(systemStats?.storage.usage || "0") > 85
+                    ? "High Usage"
+                    : "Normal"}
                 </span>
               </div>
               <div className="info-detail">
                 <span>Last Check</span>
-                <span>{new Date(systemStats?.systemHealth.lastCheck || '').toLocaleString()}</span>
+                <span>
+                  {new Date(
+                    systemStats?.systemHealth.lastCheck || ""
+                  ).toLocaleString()}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -479,7 +626,9 @@ export default function SystemConfigPage() {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" className="stats-title">Maintenance</Typography>
+              <Typography variant="h6" className="stats-title">
+                Maintenance
+              </Typography>
               <FormControlLabel
                 control={
                   <Switch
@@ -514,7 +663,7 @@ export default function SystemConfigPage() {
                   disabled={refreshing}
                   onClick={() => {
                     // Add backup functionality here
-                    sendSuccessToast('Backup initiated!');
+                    sendSuccessToast("Backup initiated!");
                   }}
                 >
                   Create Backup

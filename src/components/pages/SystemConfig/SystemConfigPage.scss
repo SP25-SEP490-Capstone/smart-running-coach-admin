@@ -1,6 +1,6 @@
 .system-config-page {
   padding: 20px 2rem;
-  color: var(--text-primary);
+  color: #1a1a1a;
 
   &.loading {
     display: flex;
@@ -23,11 +23,11 @@
     }
 
     .MuiIconButton-root {
-      color: var(--text-secondary);
+      color: #666;
       transition: transform 0.3s ease;
 
       &:hover {
-        color: var(--primary-main);
+        color: #1976d2;
         background-color: transparent;
       }
     }
@@ -42,12 +42,12 @@
   }
 
   .info-card {
-    border: 1px solid var(--border-color);
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     box-shadow: none;
     transition: all 0.2s ease-in-out;
     height: 100%;
-    background: var(--card-bg);
+    background: #ffffff;
 
     &:hover {
       box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
@@ -55,19 +55,19 @@
     }
 
     &.cpu {
-      border-top: 3px solid var(--cpu-color);
+      border-top: 3px solid #ff7043;
     }
 
     &.memory {
-      border-top: 3px solid var(--memory-color);
+      border-top: 3px solid #5c6bc0;
     }
 
     &.storage {
-      border-top: 3px solid var(--storage-color);
+      border-top: 3px solid #66bb6a;
     }
 
     &.network {
-      border-top: 3px solid var(--network-color);
+      border-top: 3px solid #26c6da;
     }
 
     .card-title {
@@ -78,7 +78,7 @@
 
     .card-subtitle {
       font-size: 0.875rem;
-      color: var(--text-secondary);
+      color: #666;
       margin-bottom: 1rem;
     }
 
@@ -87,13 +87,13 @@
       justify-content: space-between;
       margin: 0.5rem 0;
       padding: 0.25rem 0;
-      border-bottom: 1px solid var(--border-light);
+      border-bottom: 1px solid #f0f0f0;
 
       span {
         font-size: 0.875rem;
 
         &:first-child {
-          color: var(--text-secondary);
+          color: #666;
           font-weight: 500;
         }
 
@@ -136,7 +136,7 @@
       font-weight: 600;
       margin-bottom: 1.5rem;
       padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border-light);
+      border-bottom: 1px solid #f0f0f0;
       color: inherit;
     }
 
@@ -149,14 +149,14 @@
       transition: background-color 0.2s;
 
       &:hover {
-        background-color: var(--hover-bg);
+        background-color: #f9f9f9;
       }
 
       span {
         font-size: 0.875rem;
 
         &:first-child {
-          color: var(--text-secondary);
+          color: #666;
         }
       }
     }
@@ -165,11 +165,11 @@
       font-weight: 600;
 
       &.optimal {
-        color: var(--success-main);
+        color: #2e7d32;
       }
 
       &.warning {
-        color: var(--warning-main);
+        color: #ed6c02;
       }
     }
   }
@@ -202,6 +202,46 @@
   }
 }
 
+// Dark mode styles
+[data-theme="dark"] {
+  &.system-config-page {
+    color: #f5f5f5;
+
+    .info-card {
+      background: #2d2d2d;
+      border-color: #444;
+
+      .card-subtitle {
+        color: #b0b0b0;
+      }
+
+      .info-detail {
+        border-bottom-color: #333;
+
+        span:first-child {
+          color: #b0b0b0;
+        }
+      }
+    }
+
+    .system-stats {
+      .stats-title {
+        border-bottom-color: #333;
+      }
+
+      .info-detail {
+        &:hover {
+          background-color: #3a3a3a;
+        }
+
+        span:first-child {
+          color: #b0b0b0;
+        }
+      }
+    }
+  }
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -209,31 +249,4 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-
-:root {
-  --text-primary: #1a1a1a;
-  --text-secondary: #666;
-  --card-bg: #ffffff;
-  --border-color: #e0e0e0;
-  --border-light: #f0f0f0;
-  --hover-bg: #f9f9f9;
-  --primary-main: #1976d2;
-  --success-main: #2e7d32;
-  --warning-main: #ed6c02;
-  --error-main: #d32f2f;
-  --cpu-color: #ff7043;
-  --memory-color: #5c6bc0;
-  --storage-color: #66bb6a;
-  --network-color: #26c6da;
-}
-
-[data-theme="dark"] {
-  --text-primary: #f5f5f5;
-  --text-secondary: #b0b0b0;
-  --card-bg: #2d2d2d;
-  --border-color: #444;
-  --border-light: #333;
-  --hover-bg: #3a3a3a;
 }
