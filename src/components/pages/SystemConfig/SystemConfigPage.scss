@@ -1,14 +1,39 @@
 .system-config-page {
   padding: 20px 2rem;
+  color: var(--text-primary);
+
+  &.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+  }
 
   .title-container {
     margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
     h1 {
       margin: 0;
-      font-size: 1.5rem;
+      font-size: 1.75rem;
       font-weight: 600;
-      color: #333;
+      color: inherit;
+    }
+
+    .MuiIconButton-root {
+      color: var(--text-secondary);
+      transition: transform 0.3s ease;
+
+      &:hover {
+        color: var(--primary-main);
+        background-color: transparent;
+      }
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
     }
   }
 
@@ -17,42 +42,90 @@
   }
 
   .info-card {
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
     box-shadow: none;
-    transition: box-shadow 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+    height: 100%;
+    background: var(--card-bg);
 
     &:hover {
-      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    &.cpu {
+      border-top: 3px solid var(--cpu-color);
+    }
+
+    &.memory {
+      border-top: 3px solid var(--memory-color);
+    }
+
+    &.storage {
+      border-top: 3px solid var(--storage-color);
+    }
+
+    &.network {
+      border-top: 3px solid var(--network-color);
     }
 
     .card-title {
       font-weight: 600;
       margin-bottom: 0.5rem;
-      color: #333;
+      color: inherit;
     }
 
     .card-subtitle {
       font-size: 0.875rem;
-      color: #666;
+      color: var(--text-secondary);
       margin-bottom: 1rem;
     }
 
     .info-detail {
       display: flex;
       justify-content: space-between;
-      margin: 0.25rem 0;
+      margin: 0.5rem 0;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid var(--border-light);
 
       span {
         font-size: 0.875rem;
+
+        &:first-child {
+          color: var(--text-secondary);
+          font-weight: 500;
+        }
+
+        &:last-child {
+          font-weight: 600;
+        }
+
+        &.truncate {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 120px;
+          display: inline-block;
+        }
       }
 
       &:first-of-type {
-        margin-top: 0.5rem;
+        margin-top: 0.75rem;
+      }
+
+      &:last-child {
+        border-bottom: none;
       }
     }
 
     .progress-bar {
       margin-top: 1rem;
+
+      .MuiLinearProgress-root {
+        height: 8px;
+        border-radius: 4px;
+      }
     }
   }
 
@@ -61,29 +134,42 @@
 
     .stats-title {
       font-weight: 600;
-      margin-bottom: 1rem;
-      color: #333;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-light);
+      color: inherit;
     }
 
     .info-detail {
       display: flex;
       justify-content: space-between;
-      margin: 0.5rem 0;
+      margin: 0.75rem 0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: var(--hover-bg);
+      }
 
       span {
         font-size: 0.875rem;
+
+        &:first-child {
+          color: var(--text-secondary);
+        }
       }
     }
 
     .status-text {
-      font-weight: 500;
+      font-weight: 600;
 
       &.optimal {
-        color: #2e7d32; // green-ish
+        color: var(--success-main);
       }
 
       &.warning {
-        color: #ed6c02; // orange-ish
+        color: var(--warning-main);
       }
     }
   }
@@ -93,11 +179,61 @@
 
     .MuiFormControlLabel-root {
       margin-right: 0;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
     }
 
     .MuiTextField-root {
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+
+      .MuiButton-root {
+        padding: 8px 24px;
+        text-transform: none;
+        font-weight: 500;
+        flex: 1;
+      }
     }
   }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+:root {
+  --text-primary: #1a1a1a;
+  --text-secondary: #666;
+  --card-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --border-light: #f0f0f0;
+  --hover-bg: #f9f9f9;
+  --primary-main: #1976d2;
+  --success-main: #2e7d32;
+  --warning-main: #ed6c02;
+  --error-main: #d32f2f;
+  --cpu-color: #ff7043;
+  --memory-color: #5c6bc0;
+  --storage-color: #66bb6a;
+  --network-color: #26c6da;
+}
+
+[data-theme="dark"] {
+  --text-primary: #f5f5f5;
+  --text-secondary: #b0b0b0;
+  --card-bg: #2d2d2d;
+  --border-color: #444;
+  --border-light: #333;
+  --hover-bg: #3a3a3a;
 }
