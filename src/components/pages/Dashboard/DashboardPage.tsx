@@ -87,9 +87,9 @@ export default function DashboardPage() {
           setUsers(usersResponse.data.data);
         }
 
-        // if (postsResponse.status === 200) {
-        //   setPosts(postsResponse.data.data);
-        // }
+        if (postsResponse.status === 200) {
+          setPosts(postsResponse.data.data);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
