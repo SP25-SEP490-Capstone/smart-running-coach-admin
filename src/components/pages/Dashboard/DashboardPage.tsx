@@ -16,14 +16,55 @@ export default function DashboardPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const userGrowthData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [{
-      label: 'User Growth',
-      data: [3000, 4500, 4000, 5000, 6000, 5500],
-      borderColor: '#4A90E2',
-      fill: false,
-    }],
+  const getUserGrowthData = (users) => {
+    if (!users || users.length === 0) return {
+      labels: [],
+      datasets: [{
+        label: 'User Growth',
+        data: [],
+        borderColor: '#4A90E2',
+        fill: false,
+      }]
+    };
+
+    // Group users by month of creation
+    const monthlyCounts = users.reduce((acc, user) => {
+      const date = new Date(user.created_at);
+      const month = date.getMonth();
+      const year = date.getFullYear();
+      const key = `${year}-${month}`;
+      
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Sort months chronologically
+    const sortedMonths = Object.keys(monthlyCounts).sort();
+    
+    // Get month names for labels
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const labels = sortedMonths.map(key => {
+      const [year, month] = key.split('-');
+      return `${monthNames[parseInt(month)]} ${year}`;
+    });
+
+    // Calculate cumulative counts
+    let cumulativeCount = 0;
+    const data = sortedMonths.map(key => {
+      cumulativeCount += monthlyCounts[key];
+      return cumulativeCount;
+    });
+
+    return {
+      labels,
+      datasets: [{
+        label: 'User Growth',
+        data,
+        borderColor: '#4A90E2',
+        fill: false,
+        tension: 0.1
+      }]
+    };
   };
 
   const categoryData = {
@@ -46,9 +87,9 @@ export default function DashboardPage() {
           setUsers(usersResponse.data.data);
         }
 
-        if (postsResponse.status === 200) {
-          setPosts(postsResponse.data.data);
-        }
+        // if (postsResponse.status === 200) {
+        //   setPosts(postsResponse.data.data);
+        // }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -94,7 +135,7 @@ export default function DashboardPage() {
               <Skeleton width={100} height={30} />
             ) : (
               <div className="stats-card-value">
-                {users.filter(user => user.UserRole.some(role => role.Role.role_name === 'runner')).length}
+                {users.filter(user => user.roles.includes('runner') && user.is_active).length}
               </div>
             )}
           </div>
@@ -129,7 +170,32 @@ export default function DashboardPage() {
               {loading ? (
                 <Skeleton height={300} />
               ) : (
-                <Line data={userGrowthData} />
+                <Line 
+                  data={getUserGrowthData(users)} 
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        position: 'top',
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function(context) {
+                            return `Total users: ${context.raw}`;
+                          }
+                        }
+                      }
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        ticks: {
+                          precision: 0
+                        }
+                      }
+                    }
+                  }}
+                />
               )}
             </CardContent>
           </Card>
@@ -148,6 +214,7 @@ export default function DashboardPage() {
         </Grid>
       </Grid>
 
+      {/* Rest of the component remains the same */}
       <div className="latest-container">
         <div className="latest-users">
           <p className="latest-title">Latest Users</p>
@@ -166,22 +233,25 @@ export default function DashboardPage() {
                 </div>
               ))
             ) : (
-              users.slice(0, 3).map(user => (
-                <div key={user.id} className="user-item" onClick={() => navigate(`/users/${user.id}`)}>
-                  <div className="user-meta">
-                    <Avatar>{user.name[0]}</Avatar>
-                    <div>
-                      <p className="user-name">{user.name}</p>
-                      <p className="user-email">{user.email}</p>
+              [...users]
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .slice(0, 3)
+                .map(user => (
+                  <div key={user.id} className="user-item" onClick={() => navigate(`/users/${user.id}`)}>
+                    <div className="user-meta">
+                      <Avatar>{user.username[0]}</Avatar>
+                      <div>
+                        <p className="user-name">{user.username}</p>
+                        <p className="user-email">{user.email}</p>
+                      </div>
                     </div>
+                    <Chip 
+                      className='user-status' 
+                      label={user.is_active ? 'Active' : 'Inactive'} 
+                      color={user.is_active ? 'success' : 'default'} 
+                    />
                   </div>
-                  <Chip 
-                    className='user-status' 
-                    label={user.is_active ? 'Active' : 'Inactive'} 
-                    color={user.is_active ? 'success' : 'default'} 
-                  />
-                </div>
-              ))
+                ))
             )}
           </div>
           <div className='btn-view-all' onClick={() => navigate('/users')}>

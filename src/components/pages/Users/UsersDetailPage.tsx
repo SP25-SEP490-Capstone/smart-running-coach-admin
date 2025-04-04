@@ -1,5 +1,5 @@
-import { Avatar, Button, IconButton } from '@mui/material';
-import { Bar } from 'react-chartjs-2';
+import { Avatar, Button, IconButton, Chip } from "@mui/material";
+import { Bar } from "react-chartjs-2";
 import {
   Person as PersonIcon,
   Cake as CakeIcon,
@@ -17,99 +17,170 @@ import {
   EditOutlined as EditOutlinedIcon,
   WatchOutlined as WatchOutlinedIcon,
   Google as GoogleIcon,
-  LockClockOutlined as LockClockOutlinedIcon
-} from '@mui/icons-material';
-import 'chart.js/auto';
-import './UsersDetailPage.scss';
-//@ts-ignore
-import logo from '@assets/avatar.jpg';
-//@ts-ignore
-import googlefiticon from '@assets/googlefit.png';
-import CommonBreadcrumb from '@components/commons/CommonBreadcrumb';
-import { Link } from 'react-router-dom';
-import UDEBasicProfile from './UsersDetailEdit/UDEBasicProfile';
-import { useState } from 'react';
+  LockClockOutlined as LockClockOutlinedIcon,
+  Female as FemaleIcon,
+  Male as MaleIcon,
+  Transgender as TransgenderIcon,
+} from "@mui/icons-material";
+import "chart.js/auto";
+import "./UsersDetailPage.scss";
+import CommonBreadcrumb from "@components/commons/CommonBreadcrumb";
+import { Link, useParams } from "react-router-dom";
+import UDEBasicProfile from "./UsersDetailEdit/UDEBasicProfile";
+import { useState, useEffect } from "react";
+import { aget } from "@components/utils/util_axios";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import UDEPointsHistory from "./UsersPointsHistory/UDEPointsHistory";
 
-function PersonalDetails({ onUdeBasicProfile }: any) {
+function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
+  const getGenderIcon = () => {
+    if (!user?.gender) return null;
+    switch (user.gender.toLowerCase()) {
+      case "male":
+        return <MaleIcon fontSize="small" />;
+      case "female":
+        return <FemaleIcon fontSize="small" />;
+      default:
+        return <TransgenderIcon fontSize="small" />;
+    }
+  };
+
   return (
-    <div className='personal-details'>
-      <div className='label'>
+    <div className="personal-details">
+      <div className="label">
         <p>Personal Details</p>
-        <IconButton className='btn-edit'>
-          <EditOutlinedIcon onClick={onUdeBasicProfile} />
-        </IconButton>
+        {!loading && (
+          <IconButton className="btn-edit" onClick={onUdeBasicProfile}>
+            <EditOutlinedIcon />
+          </IconButton>
+        )}
       </div>
-      <div className='items'>
-        <div className='item'>
-          <PersonIcon className='item-icon' />
-          <div className='item-meta'>
-            <p className='label'>Full name</p>
-            <p className='value'>Sarah Wilson</p>
+      <div className="items">
+        <div className="item">
+          <PersonIcon className="item-icon" />
+          <div className="item-meta">
+            <p className="label">Full name</p>
+            {loading ? <Skeleton width={150} /> : <p className="value">{user?.name || "N/A"}</p>}
           </div>
         </div>
-        <div className='item'>
-          <CakeIcon className='item-icon' />
-          <div className='item-meta'>
-            <p className='label'>Birth Date</p>
-            <p className='value'>1995-01-15</p>
+        <div className="item">
+          <CakeIcon className="item-icon" />
+          <div className="item-meta">
+            <p className="label">Birth Date</p>
+            {loading ? (
+              <Skeleton width={100} />
+            ) : (
+              <p className="value">
+                {user?.birth_date ? new Date(user.birth_date).toLocaleDateString() : "N/A"}
+              </p>
+            )}
           </div>
         </div>
-        <div className='item'>
-          <EmailIcon className='item-icon' />
-          <div className='item-meta'>
-            <p className='label'>Email</p>
-            <p className='value'>sarah.wilson@example.com</p>
+        <div className="item">
+          <EmailIcon className="item-icon" />
+          <div className="item-meta">
+            <p className="label">Email</p>
+            {loading ? <Skeleton width={200} /> : <p className="value">{user?.email || "N/A"}</p>}
           </div>
         </div>
-        <div className='item'>
-          <PhoneIcon className='item-icon' />
-          <div className='item-meta'>
-            <p className='label'>Phone</p>
-            <p className='value'>123-456-7890</p>
+        {user?.phone_number && (
+          <div className="item">
+            <PhoneIcon className="item-icon" />
+            <div className="item-meta">
+              <p className="label">Phone</p>
+              {loading ? (
+                <Skeleton width={120} />
+              ) : (
+                <p className="value">{`${user.phone_code || ""} ${user.phone_number}`}</p>
+              )}
+            </div>
+          </div>
+        )}
+        {(user?.address1 || user?.address2) && (
+          <div className="item">
+            <HomeIcon className="item-icon" />
+            <div className="item-meta">
+              <p className="label">Address</p>
+              {loading ? (
+                <Skeleton width={180} />
+              ) : (
+                <p className="value">
+                  {`${user.address1 || ""} ${user.address2 || ""} ${user.zip_code || ""}`.trim()}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+        <div className="item">
+          <BadgeIcon className="item-icon" />
+          <div className="item-meta">
+            <p className="label">Role</p>
+            {loading ? (
+              <Skeleton width={100} />
+            ) : (
+              <div className="value">
+                {user?.roles?.map((role: string) => (
+                  <Chip
+                    key={role}
+                    label={role}
+                    size="small"
+                    sx={{ mr: 0.5, textTransform: "capitalize" }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
-        <div className='item'>
-          <HomeIcon className='item-icon' />
-          <div className='item-meta'>
-            <p className='label'>Address</p>
-            <p className='value'>123 Main St, Anytown, USA 12345</p>
+        <div className="item">
+          <CircleIcon className="item-icon" />
+          <div className="item-meta">
+            <p className="label">Status</p>
+            {loading ? (
+              <Skeleton width={80} />
+            ) : (
+              <Chip
+                label={user?.is_active ? "Active" : "Inactive"}
+                color={user?.is_active ? "success" : "error"}
+                size="small"
+              />
+            )}
           </div>
         </div>
-        <div className='item'>
-          <BadgeIcon className='item-icon' />
-          <div className='item-meta'>
-            <p className='label'>Role</p>
-            <p className='value'>Premium Member</p>
+        <div className="item">
+          {getGenderIcon() || <PersonIcon className="item-icon" />}
+          <div className="item-meta">
+            <p className="label">Gender</p>
+            {loading ? <Skeleton width={80} /> : <p className="value">{user?.gender || "N/A"}</p>}
           </div>
         </div>
-        <div className='item'>
-          <CircleIcon className='item-icon' />
-          <div className='item-meta'>
-            <p className='label'>Status</p>
-            <p className='value'>Active</p>
-          </div>
-        </div>
-        <div className='item'>
-          <EventIcon className='item-icon' />
-          <div className='item-meta'>
-            <p className='label'>Created</p>
-            <p className='value'>2024-01-15 09:30 AM</p>
+        <div className="item">
+          <EventIcon className="item-icon" />
+          <div className="item-meta">
+            <p className="label">Created</p>
+            {loading ? (
+              <Skeleton width={150} />
+            ) : (
+              <p className="value">
+                {user?.created_at ? new Date(user.created_at).toLocaleString() : "N/A"}
+              </p>
+            )}
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-function CommunityActivity() {
+function CommunityActivity({ loading, stats }: { loading: boolean; stats: any }) {
   const data = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     datasets: [
       {
-        label: 'Posts',
+        label: "Posts",
         data: [5, 10, 15, 8, 20, 25, 30],
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: "rgba(54, 162, 235, 0.6)",
+        borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,
       },
     ],
@@ -121,169 +192,299 @@ function CommunityActivity() {
   };
 
   return (
-    <div className='community-activity'>
-      <p className='label'>Community Activity</p>
-      <div className='stats'>
-        <div className='stat'>
-          <ThumbUpOutlinedIcon className='stat-icon' />
-          <p className='stat-value'>100</p>
-          <p className='stat-label'>Upvotes</p>
+    <div className="community-activity">
+      <p className="label">Community Activity</p>
+      <div className="stats">
+        <div className="stat">
+          <ThumbUpOutlinedIcon className="stat-icon" />
+          {loading ? <Skeleton width={30} /> : <p className="stat-value">{stats?.total_likes_received || 0}</p>}
+          <p className="stat-label">Upvotes</p>
         </div>
-        <div className='stat'>
-          <ThumbDownOffAltOutlinedIcon className='stat-icon' />
-          <p className='stat-value'>50</p>
-          <p className='stat-label'>Downvotes</p>
+        <div className="stat">
+          <ThumbDownOffAltOutlinedIcon className="stat-icon" />
+          {loading ? <Skeleton width={30} /> : <p className="stat-value">{stats?.total_dislikes_received || 0}</p>}
+          <p className="stat-label">Downvotes</p>
         </div>
-        <div className='stat'>
-          <ModeCommentOutlinedIcon className='stat-icon' />
-          <p className='stat-value'>50</p>
-          <p className='stat-label'>Comments</p>
-        </div>
-      </div>
-      <div className='activity-graph'>
-        <p className='label'>Posting Activity</p>
-        <div className='graph'>
-          <Bar data={data} options={options} />
+        <div className="stat">
+          <ModeCommentOutlinedIcon className="stat-icon" />
+          {loading ? <Skeleton width={30} /> : <p className="stat-value">{stats?.total_comments_received || 0}</p>}
+          <p className="stat-label">Comments</p>
         </div>
       </div>
-      <Link to='/posts'>
-        <p className='btn-view-all'>View all</p>
+      <div className="activity-graph">
+        <p className="label">Posting Activity</p>
+        <div className="graph">
+          {loading ? <Skeleton height={200} /> : <Bar data={data} options={options} />}
+        </div>
+      </div>
+      <Link to="/posts">
+        <p className="btn-view-all">View all</p>
       </Link>
     </div>
   );
 }
 
-function ConnectedDevices() {
+function ConnectedDevices({ loading }: { loading: boolean }) {
   return (
-    <div className='connected-devices'>
-      <p className='label'>Connected Devices</p>
-      <div className='device-meta'>
-        <p className='device-meta-label'>Connected devices</p>
-        <p className='device-meta-value'>4 devices</p>
+    <div className="connected-devices">
+      <p className="label">Connected Devices</p>
+      <div className="device-meta">
+        <p className="device-meta-label">Connected devices</p>
+        {loading ? <Skeleton width={80} /> : <p className="device-meta-value">4 devices</p>}
       </div>
-      <div className='device-list'>
-        <div className='device-item'>
-          <div className='device-item-meta'>
-            <WatchOutlinedIcon className='device-icon' />
-            <p>Xiaomi Watch 2</p>
-          </div>
-          <div>
-            <p className='device-item-status active'>Active</p>
-          </div>
-        </div>
-        <div className='device-item'>
-          <div className='device-item-meta'>
-            <WatchOutlinedIcon className='device-icon' />
-            <p>Xiaomi Watch 2</p>
-          </div>
-          <div>
-            <p className='device-item-status active'>Active</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function LoginInformation() {
-  return (
-    <div className='login-information'>
-      <p className='label'>Login Information</p>
-      <div className='login-information-content'>
-        <div className='login-method'>
-          <p className='label'>Primary Login Method</p>
-          <div className='login-method-content'>
-            <GoogleIcon className='logo-google' />
-            <div className='meta'>
-              <p className='meta-label'>Google Account</p>
-              <p className='meta-email'>sarah.wilson@example.com</p>
-            </div>
-          </div>
-        </div>
-        <div className='connected-method'>
-          <p className='label'>Connected Accounts</p>
-          <div className='login-method-content'>
-            <img src={googlefiticon} alt="Google Fit Icon" className='logo-google-fit' />
-            <div className='meta'>
-              <p className='meta-label'>Google Fit Account</p>
-              <p className='meta-email'>sarah.wilson@example.com</p>
-            </div>
-          </div>
-        </div>
-        <div className='security-method'>
-          <p className='label'>Security Accounts</p>
-          <div className='security-method-content'>
-            <div className='item'>
-              <div className='item-meta'>
-                <LockClockOutlinedIcon className='logo-lock' />
-                <p className='meta-label'>Password Reset Required</p>
+      <div className="device-list">
+        {loading ? (
+          <>
+            <Skeleton height={50} style={{ marginBottom: "10px" }} />
+            <Skeleton height={50} />
+          </>
+        ) : (
+          <>
+            <div className="device-item">
+              <div className="device-item-meta">
+                <WatchOutlinedIcon className="device-icon" />
+                <p>Xiaomi Watch 2</p>
               </div>
-              <p className='item-active active'>Active</p>
+              <div>
+                <p className="device-item-status active">Active</p>
+              </div>
             </div>
-          </div>
-        </div>
+            <div className="device-item">
+              <div className="device-item-meta">
+                <WatchOutlinedIcon className="device-icon" />
+                <p>Xiaomi Watch 2</p>
+              </div>
+              <div>
+                <p className="device-item-status active">Active</p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
-  )
+  );
 }
 
-function ChatHistoryLog() {
+function LoginInformation({ user, loading }: { user: any; loading: boolean }) {
   return (
-    <div className='chat-history-log'>
-      <p className='label'>Chat History</p>
-      <div className='chat-history-log-content'>
-        <div className='session-item'>
-          <p className='session-value session-value-expert'>200</p>
-          <p className='session-label'>with Experts</p>
-          <p className='session-viewmore'>View more</p>
+    <div className="login-information">
+      <p className="label">Login Information</p>
+      <div className="login-information-content">
+        <div className="login-method">
+          <p className="label">Primary Login Method</p>
+          {loading ? (
+            <Skeleton height={50} />
+          ) : (
+            <div className="login-method-content">
+              <GoogleIcon className="logo-google" />
+              <div className="meta">
+                <p className="meta-label">Google Account</p>
+                <p className="meta-email">{user?.email || "N/A"}</p>
+              </div>
+            </div>
+          )}
         </div>
-        <div className='session-item'>
-          <p className='session-value session-value-ai'>200</p>
-          <p className='session-label'>with AI</p>
-          <p className='session-viewmore'>View more</p>
+        <div className="security-method">
+          <p className="label">Security Accounts</p>
+          {loading ? (
+            <Skeleton height={50} />
+          ) : (
+            <div className="security-method-content">
+              <div className="item">
+                <div className="item-meta">
+                  <LockClockOutlinedIcon className="logo-lock" />
+                  <p className="meta-label">Password Reset Required</p>
+                </div>
+                <p className={`item-active ${user?.isResetPassAllowed ? "active" : ""}`}>
+                  {user?.isResetPassAllowed ? "Active" : "Inactive"}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
-  )
+  );
+}
+
+function PointInformation({ user, loading, onShowHistory }: { user: any; loading: boolean; onShowHistory: () => void }) {
+  return (
+    <div className="point-information">
+      <p className="label">Point Information</p>
+      <div className="point-information-content">
+        <div className="point-item">
+          {loading ? <Skeleton width={50} /> : <p className="point-value">{user?.points || 0}</p>}
+          <p className="point-label">Total Points Earned</p>
+        </div>
+        <div className="point-item">
+          <Button variant="contained" className="btn-view-history" onClick={onShowHistory}>
+            View History
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChatHistoryLog({ loading, stats }: { loading: boolean; stats: any }) {
+  return (
+    <div className="chat-history-log">
+      <p className="label">Chat History</p>
+      <div className="chat-history-log-content">
+        <div className="session-item">
+          {loading ? (
+            <Skeleton width={50} />
+          ) : (
+            <p className="session-value session-value-expert">{stats?.total_chat_sessions || 0}</p>
+          )}
+          <p className="session-label">with Experts</p>
+          <p className="session-viewmore">View more</p>
+        </div>
+        <div className="session-item">
+          {loading ? (
+            <Skeleton width={50} />
+          ) : (
+            <p className="session-value session-value-ai">{stats?.total_active_chat_sessions || 0}</p>
+          )}
+          <p className="session-label">with AI</p>
+          <p className="session-viewmore">View more</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function UsersDetailPage() {
+  const [udeBasicProfile, setUdeBasicProfile] = useState(false);
+  const [udePointsHistory, setUdePointsHistory] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const { id } = useParams();
 
-  const [udeBasicProfile, setUdeBasicProfile] = useState(false)
+  const fetchUser = async () => {
+    try {
+      setLoading(true);
+      const response = await aget(`/users/admin/${id}`);
+      setUser(response.data.data);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, [id]);
+
+  const handleShowHistory = () => {
+    setUdePointsHistory(true);
+  };
 
   return (
     <div className="users-detail-page">
-      <CommonBreadcrumb items={[
-        { name: 'Dashboard', link: '/dashboard' },
-        { name: 'Users', link: '/users' },
-        { name: 'Sarah Wilson' }
-      ]} />
-      <div className='profile-card'>
-        <div className='left'>
-          <Avatar src={logo} className='avatar' />
+      <CommonBreadcrumb
+        items={[
+          { name: "Dashboard", link: "/dashboard" },
+          { name: "Users", link: "/users" },
+          { name: loading ? "Loading..." : user?.username || "User" },
+        ]}
+      />
+      <div className="profile-card">
+        <div className="left">
+          {loading ? (
+            <Skeleton circle height={64} width={64} />
+          ) : (
+            <Avatar className="avatar">{user?.username?.charAt(0) || "U"}</Avatar>
+          )}
           <div>
-            <div className='name'>Sarah Wilson<span className='status'>Active</span></div>
-            <div className='role'>Premium Member</div>
-            <div className='id'>ID: 12345</div>
+            <div className="name">
+              {loading ? (
+                <Skeleton width={150} />
+              ) : (
+                <>
+                  {user?.username}
+                  <span className={`status ${user?.is_active ? "active" : "inactive"}`}>
+                    {user?.is_active ? "Active" : "Inactive"}
+                  </span>
+                </>
+              )}
+            </div>
+            <div className="role">
+              {loading ? <Skeleton width={100} /> : user?.roles?.join(", ") || "No role"}
+            </div>
+            <div className="id">
+              {loading ? <Skeleton width={120} /> : `ID: ${user?.id || "N/A"}`}
+            </div>
           </div>
         </div>
-        <div className='right'>
-          <Button variant='contained' startIcon={<DoNotDisturbAltIcon />} className='btn-suspend'>Suspend</Button>
-          <Button variant='contained' startIcon={<DeleteOutlineIcon />} className='btn-delete'>Delete</Button>
+        <div className="right">
+          {loading ? (
+            <>
+              <Skeleton width={120} height={36} style={{ marginRight: "10px" }} />
+              <Skeleton width={100} height={36} />
+            </>
+          ) : (
+            <>
+              <Button
+                variant="contained"
+                startIcon={<DoNotDisturbAltIcon />}
+                className="btn-suspend"
+              >
+                Suspend
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<DeleteOutlineIcon />}
+                className="btn-delete"
+              >
+                Delete
+              </Button>
+            </>
+          )}
         </div>
       </div>
-      <div className='rows'>
-        <div className='row'>
-          <PersonalDetails onUdeBasicProfile={() => setUdeBasicProfile(true)} />
-          <CommunityActivity />
-          <ChatHistoryLog />
+      <div className="rows">
+        <div className="row">
+          <PersonalDetails
+            user={user}
+            loading={loading}
+            onUdeBasicProfile={() => setUdeBasicProfile(true)}
+          />
+          <PointInformation 
+            user={user} 
+            loading={loading} 
+            onShowHistory={handleShowHistory} 
+          />
+          <CommunityActivity 
+            loading={loading} 
+            stats={user?.stats} 
+          />
+          <ChatHistoryLog 
+            loading={loading} 
+            stats={user?.stats} 
+          />
         </div>
-        <div className='row'>
-          <ConnectedDevices />
-          <LoginInformation />
+        <div className="row">
+          <ConnectedDevices loading={loading} />
+          <LoginInformation user={user} loading={loading} />
         </div>
       </div>
-      <UDEBasicProfile open={udeBasicProfile} onClose={() => setUdeBasicProfile(false)} />
+      {user && (
+        <>
+          <UDEBasicProfile
+            open={udeBasicProfile}
+            onClose={() => setUdeBasicProfile(false)}
+            user={user}
+            onSave={fetchUser}
+          />
+          <UDEPointsHistory
+            open={udePointsHistory}
+            onClose={() => setUdePointsHistory(false)}
+            userId={user.id}
+          />
+        </>
+      )}
     </div>
   );
 }

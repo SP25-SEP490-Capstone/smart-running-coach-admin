@@ -1,4 +1,4 @@
-.ude-basic-profile-dialog {
+.ude-point-history-dialog {
   .MuiDialog-paper {
     border-radius: 12px;
     overflow: hidden;
@@ -61,32 +61,22 @@
     }
   }
 
-  .MuiOutlinedInput-root {
-    background-color: #fff;
-
-    &.Mui-focused .MuiOutlinedInput-notchedOutline {
-      border-color: #1976d2;
-      border-width: 1px;
+  .MuiTable-root {
+    th {
+      font-weight: 600;
+      background-color: #f9f9f9;
     }
-  }
 
-  .MuiInputLabel-root {
-    &.Mui-focused {
-      color: #1976d2;
+    td {
+      vertical-align: middle;
     }
-  }
-
-  .MuiChip-root {
-    margin-right: 4px;
-    margin-bottom: 4px;
   }
 }
 
 @media (max-width: 600px) {
-  .ude-basic-profile-dialog {
-
+  .ude-point-history-dialog {
     .MuiDialogContent-root {
-      padding: 35px;
+      padding: 16px;
     }
 
     .dialog-footer {
@@ -97,6 +87,12 @@
       button {
         width: 100%;
       }
+    }
+
+    .MuiTable-root {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
     }
   }
 }
