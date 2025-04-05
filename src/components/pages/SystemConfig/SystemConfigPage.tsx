@@ -12,6 +12,7 @@ import {
   Button,
   IconButton,
   Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import Skeleton from "react-loading-skeleton";
@@ -146,203 +147,16 @@ export default function SystemConfigPage() {
 
   if (loading) {
     return (
-      <Box className="system-config-page loading">
-        <div className="title-container">
-          <Skeleton width={300} height={40} />
-          <Skeleton circle width={40} height={40} />
-        </div>
-
-        <Grid container spacing={2} className="info-cards">
-          {/* CPU Card Skeleton */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Card className="info-card cpu">
-              <CardContent>
-                <Skeleton width={100} height={30} />
-                <Skeleton
-                  width={200}
-                  height={20}
-                  style={{ marginBottom: "1rem" }}
-                />
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={60} />
-                </div>
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={60} />
-                </div>
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={60} />
-                </div>
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={60} />
-                </div>
-                <Skeleton height={8} style={{ marginTop: "1rem" }} />
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Memory Card Skeleton */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Card className="info-card memory">
-              <CardContent>
-                <Skeleton width={100} height={30} />
-                <Skeleton
-                  width={200}
-                  height={20}
-                  style={{ marginBottom: "1rem" }}
-                />
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={60} />
-                </div>
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={60} />
-                </div>
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={60} />
-                </div>
-                <Skeleton height={8} style={{ marginTop: "1rem" }} />
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Storage Card Skeleton */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Card className="info-card storage">
-              <CardContent>
-                <Skeleton width={100} height={30} />
-                <Skeleton
-                  width={200}
-                  height={20}
-                  style={{ marginBottom: "1rem" }}
-                />
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={60} />
-                </div>
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={60} />
-                </div>
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={60} />
-                </div>
-                <Skeleton height={8} style={{ marginTop: "1rem" }} />
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Network Card Skeleton */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Card className="info-card network">
-              <CardContent>
-                <Skeleton width={100} height={30} />
-                <Skeleton
-                  width={200}
-                  height={20}
-                  style={{ marginBottom: "1rem" }}
-                />
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={120} />
-                </div>
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={120} />
-                </div>
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={120} />
-                </div>
-                <div className="info-detail">
-                  <Skeleton width={80} />
-                  <Skeleton width={120} />
-                </div>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        {/* System Info and Health Skeleton */}
-        <Grid container spacing={2} className="system-stats">
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Skeleton
-                  width={200}
-                  height={30}
-                  style={{ marginBottom: "1.5rem" }}
-                />
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div
-                    key={i}
-                    className="info-detail"
-                    style={{ margin: "0.75rem 0", padding: "0.5rem" }}
-                  >
-                    <Skeleton width={100} />
-                    <Skeleton width={180} />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Skeleton
-                  width={200}
-                  height={30}
-                  style={{ marginBottom: "1.5rem" }}
-                />
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className="info-detail"
-                    style={{ margin: "0.75rem 0", padding: "0.5rem" }}
-                  >
-                    <Skeleton width={100} />
-                    <Skeleton width={180} />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        {/* Maintenance Section Skeleton */}
-        <Grid container spacing={2} className="maintenance-section">
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Skeleton
-                  width={200}
-                  height={30}
-                  style={{ marginBottom: "1.5rem" }}
-                />
-                <Skeleton
-                  width={200}
-                  height={50}
-                  style={{ marginBottom: "1.5rem" }}
-                />
-                <Skeleton height={80} style={{ marginBottom: "1.5rem" }} />
-                <div
-                  className="action-buttons"
-                  style={{ display: "flex", gap: "1rem" }}
-                >
-                  <Skeleton width={120} height={40} />
-                  <Skeleton width={120} height={40} />
-                </div>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+      <Box
+        className="system-config-page loading"
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "80vh",
+        }}
+      >
+        <CircularProgress size={60} className="loading" />
       </Box>
     );
   }

@@ -382,8 +382,8 @@ export default function UsersPage() {
                 <TableRow key={user.id}>
                   <TableCell>
                     <Link className="user-info" to={`/users/${user.id}`}>
-                      <Avatar className="avatar">{user.name?.charAt(0)}</Avatar>
-                      <span>{user.name}</span>
+                      <Avatar className="avatar">{user.username?.charAt(0)}</Avatar>
+                      <span>{user.username}</span>
                     </Link>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
