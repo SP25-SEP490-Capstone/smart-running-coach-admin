@@ -1,4 +1,4 @@
-import { Avatar, Button, IconButton, Chip } from "@mui/material";
+import { Avatar, Button, IconButton, Chip, Box } from "@mui/material";
 import { Bar } from "react-chartjs-2";
 import {
   Person as PersonIcon,
@@ -28,7 +28,7 @@ import CommonBreadcrumb from "@components/commons/CommonBreadcrumb";
 import { Link, useParams } from "react-router-dom";
 import UDEBasicProfile from "./UsersDetailEdit/UDEBasicProfile";
 import { useState, useEffect } from "react";
-import { aget } from "@components/utils/util_axios";
+import { aget, aput } from "@components/utils/util_axios";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import UDEPointsHistory from "./UsersPointsHistory/UDEPointsHistory";
@@ -43,6 +43,7 @@ import UserDetailRecordSteps from "./UsersDetailRecords/UserDetailRecordSteps";
 import UserDetailRecordTotalCalories from "./UsersDetailRecords/UserDetailRecordTotalCalories";
 import UserDetailRecordSleepSession from "./UsersDetailRecords/UserDetailRecordSleepSession";
 import UserDetailRecordExerciseSession from "./UsersDetailRecords/UserDetailRecordExerciseSession";
+import { sendErrorToast, sendSuccessToast } from "@components/utils/util_toastify";
 
 function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
   const getGenderIcon = () => {
@@ -199,6 +200,96 @@ function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ExpertApproval({ 
+  user, 
+  loading,
+  onApproveExpert,
+  onRevokeExpert 
+}: { 
+  user: any; 
+  loading: boolean;
+  onApproveExpert: () => void;
+  onRevokeExpert: () => void;
+}) {
+  const [isExpert, setIsExpert] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const hasExpertRole = user?.roles?.some((role: string) => 
+        role.toLowerCase() === 'expert'
+      );
+      setIsExpert(hasExpertRole);
+    }
+  }, [user]);
+
+  const handleToggle = () => {
+    if (isExpert) {
+      onRevokeExpert();
+    } else {
+      setConfirmDialog(true);
+    }
+  };
+
+  const handleConfirm = () => {
+    setConfirmDialog(false);
+    onApproveExpert();
+  };
+
+  return (
+    <div className="expert-approval">
+      <div className="header">
+        <p className="label">Expert Approval</p>
+      </div>
+      <div className="expert-approval-content">
+        {loading ? (
+          <Skeleton width={100} height={40} />
+        ) : (
+          <div className="toggle-container">
+            <p className="status-text">
+              Status: <span className={isExpert ? 'approved' : 'not-approved'}>{isExpert ? 'Approved' : 'Not Approved'}</span>
+            </p>
+            <Button
+              variant="contained"
+              className="toggle-button"
+              color={isExpert ? 'error' : 'primary'}
+              onClick={handleToggle}
+            >
+              {isExpert ? 'Revoke Approval' : 'Approve as Expert'}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <CommonDialog
+        open={confirmDialog}
+        onClose={() => setConfirmDialog(false)}
+        title="Confirm Expert Approval"
+        maxWidth="sm"
+        footer={
+          <Box style={{display: 'flex', gap: 10}}>
+            <Button 
+              variant="outlined" 
+              onClick={() => setConfirmDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={handleConfirm}
+            >
+              Confirm
+            </Button>
+          </Box>
+        }
+      >
+        <p style={{ padding: '1rem' }}>Are you sure you want to approve this user as an expert?</p>
+      </CommonDialog>
     </div>
   );
 }
@@ -457,6 +548,7 @@ export default function UsersDetailPage() {
       setUser(response.data.data);
     } catch (error) {
       console.error("Error fetching user:", error);
+      sendErrorToast("Failed to fetch user data");
     } finally {
       setLoading(false);
     }
@@ -485,6 +577,28 @@ export default function UsersDetailPage() {
 
   const handleCloseRecordDialog = () => {
     setUserRecordDialog({ open: false, record: "" });
+  };
+
+  const approveExpert = async () => {
+    try {
+      await aput(`/admins/approve-expert/${id}`);
+      sendSuccessToast("User approved as expert successfully");
+      fetchUser();
+    } catch (error) {
+      console.error("Error approving expert:", error);
+      sendErrorToast("Failed to approve expert");
+    }
+  };
+
+  const revokeExpert = async () => {
+    try {
+      await aput(`/admins/revoke-expert/${id}`);
+      sendSuccessToast("Expert privileges revoked successfully");
+      fetchUser();
+    } catch (error) {
+      console.error("Error revoking expert:", error);
+      sendErrorToast("Failed to revoke expert privileges");
+    }
   };
 
   return (
@@ -570,6 +684,12 @@ export default function UsersDetailPage() {
             user={user}
             loading={loading}
             onUdeBasicProfile={() => setUdeBasicProfile(true)}
+          />
+          <ExpertApproval
+            user={user}
+            loading={loading}
+            onApproveExpert={approveExpert}
+            onRevokeExpert={revokeExpert}
           />
           <PointInformation
             user={user}
