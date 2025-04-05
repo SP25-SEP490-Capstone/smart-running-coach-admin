@@ -32,6 +32,17 @@ import { aget } from "@components/utils/util_axios";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import UDEPointsHistory from "./UsersPointsHistory/UDEPointsHistory";
+import UserPointsEdit from "./UsersPointsEdit/UserPointsEdit";
+import CommonDialog from "@components/commons/CommonDialog";
+import UserDetailRecordActiveCalories from "./UsersDetailRecords/UserDetailRecordActiveCalories";
+import UserDetailRecordHeartRate from "./UsersDetailRecords/UserDetailRecordHeartRate";
+import UserDetailRecordDistance from "./UsersDetailRecords/UserDetailRecordDistance";
+import UserDetailRecordOxygenSaturation from "./UsersDetailRecords/UserDetailRecordOxygenSaturation";
+import UserDetailRecordRestingHeartRate from "./UsersDetailRecords/UserDetailRecordRestingHeartRate";
+import UserDetailRecordSteps from "./UsersDetailRecords/UserDetailRecordSteps";
+import UserDetailRecordTotalCalories from "./UsersDetailRecords/UserDetailRecordTotalCalories";
+import UserDetailRecordSleepSession from "./UsersDetailRecords/UserDetailRecordSleepSession";
+import UserDetailRecordExerciseSession from "./UsersDetailRecords/UserDetailRecordExerciseSession";
 
 function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
   const getGenderIcon = () => {
@@ -61,7 +72,11 @@ function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
           <PersonIcon className="item-icon" />
           <div className="item-meta">
             <p className="label">Full name</p>
-            {loading ? <Skeleton width={150} /> : <p className="value">{user?.name || "N/A"}</p>}
+            {loading ? (
+              <Skeleton width={150} />
+            ) : (
+              <p className="value">{user?.name || "N/A"}</p>
+            )}
           </div>
         </div>
         <div className="item">
@@ -72,7 +87,9 @@ function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
               <Skeleton width={100} />
             ) : (
               <p className="value">
-                {user?.birth_date ? new Date(user.birth_date).toLocaleDateString() : "N/A"}
+                {user?.birth_date
+                  ? new Date(user.birth_date).toLocaleDateString()
+                  : "N/A"}
               </p>
             )}
           </div>
@@ -81,7 +98,11 @@ function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
           <EmailIcon className="item-icon" />
           <div className="item-meta">
             <p className="label">Email</p>
-            {loading ? <Skeleton width={200} /> : <p className="value">{user?.email || "N/A"}</p>}
+            {loading ? (
+              <Skeleton width={200} />
+            ) : (
+              <p className="value">{user?.email || "N/A"}</p>
+            )}
           </div>
         </div>
         {user?.phone_number && (
@@ -92,7 +113,9 @@ function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
               {loading ? (
                 <Skeleton width={120} />
               ) : (
-                <p className="value">{`${user.phone_code || ""} ${user.phone_number}`}</p>
+                <p className="value">{`${user.phone_code || ""} ${
+                  user.phone_number
+                }`}</p>
               )}
             </div>
           </div>
@@ -106,7 +129,9 @@ function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
                 <Skeleton width={180} />
               ) : (
                 <p className="value">
-                  {`${user.address1 || ""} ${user.address2 || ""} ${user.zip_code || ""}`.trim()}
+                  {`${user.address1 || ""} ${user.address2 || ""} ${
+                    user.zip_code || ""
+                  }`.trim()}
                 </p>
               )}
             </div>
@@ -151,7 +176,11 @@ function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
           {getGenderIcon() || <PersonIcon className="item-icon" />}
           <div className="item-meta">
             <p className="label">Gender</p>
-            {loading ? <Skeleton width={80} /> : <p className="value">{user?.gender || "N/A"}</p>}
+            {loading ? (
+              <Skeleton width={80} />
+            ) : (
+              <p className="value">{user?.gender || "N/A"}</p>
+            )}
           </div>
         </div>
         <div className="item">
@@ -162,7 +191,9 @@ function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
               <Skeleton width={150} />
             ) : (
               <p className="value">
-                {user?.created_at ? new Date(user.created_at).toLocaleString() : "N/A"}
+                {user?.created_at
+                  ? new Date(user.created_at).toLocaleString()
+                  : "N/A"}
               </p>
             )}
           </div>
@@ -172,7 +203,13 @@ function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
   );
 }
 
-function CommunityActivity({ loading, stats }: { loading: boolean; stats: any }) {
+function CommunityActivity({
+  loading,
+  stats,
+}: {
+  loading: boolean;
+  stats: any;
+}) {
   const data = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     datasets: [
@@ -197,70 +234,45 @@ function CommunityActivity({ loading, stats }: { loading: boolean; stats: any })
       <div className="stats">
         <div className="stat">
           <ThumbUpOutlinedIcon className="stat-icon" />
-          {loading ? <Skeleton width={30} /> : <p className="stat-value">{stats?.total_likes_received || 0}</p>}
+          {loading ? (
+            <Skeleton width={30} />
+          ) : (
+            <p className="stat-value">{stats?.total_likes_received || 0}</p>
+          )}
           <p className="stat-label">Upvotes</p>
         </div>
         <div className="stat">
           <ThumbDownOffAltOutlinedIcon className="stat-icon" />
-          {loading ? <Skeleton width={30} /> : <p className="stat-value">{stats?.total_dislikes_received || 0}</p>}
+          {loading ? (
+            <Skeleton width={30} />
+          ) : (
+            <p className="stat-value">{stats?.total_dislikes_received || 0}</p>
+          )}
           <p className="stat-label">Downvotes</p>
         </div>
         <div className="stat">
           <ModeCommentOutlinedIcon className="stat-icon" />
-          {loading ? <Skeleton width={30} /> : <p className="stat-value">{stats?.total_comments_received || 0}</p>}
+          {loading ? (
+            <Skeleton width={30} />
+          ) : (
+            <p className="stat-value">{stats?.total_comments_received || 0}</p>
+          )}
           <p className="stat-label">Comments</p>
         </div>
       </div>
       <div className="activity-graph">
         <p className="label">Posting Activity</p>
         <div className="graph">
-          {loading ? <Skeleton height={200} /> : <Bar data={data} options={options} />}
+          {loading ? (
+            <Skeleton height={200} />
+          ) : (
+            <Bar data={data} options={options} />
+          )}
         </div>
       </div>
       <Link to="/posts">
         <p className="btn-view-all">View all</p>
       </Link>
-    </div>
-  );
-}
-
-function ConnectedDevices({ loading }: { loading: boolean }) {
-  return (
-    <div className="connected-devices">
-      <p className="label">Connected Devices</p>
-      <div className="device-meta">
-        <p className="device-meta-label">Connected devices</p>
-        {loading ? <Skeleton width={80} /> : <p className="device-meta-value">4 devices</p>}
-      </div>
-      <div className="device-list">
-        {loading ? (
-          <>
-            <Skeleton height={50} style={{ marginBottom: "10px" }} />
-            <Skeleton height={50} />
-          </>
-        ) : (
-          <>
-            <div className="device-item">
-              <div className="device-item-meta">
-                <WatchOutlinedIcon className="device-icon" />
-                <p>Xiaomi Watch 2</p>
-              </div>
-              <div>
-                <p className="device-item-status active">Active</p>
-              </div>
-            </div>
-            <div className="device-item">
-              <div className="device-item-meta">
-                <WatchOutlinedIcon className="device-icon" />
-                <p>Xiaomi Watch 2</p>
-              </div>
-              <div>
-                <p className="device-item-status active">Active</p>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
     </div>
   );
 }
@@ -295,7 +307,11 @@ function LoginInformation({ user, loading }: { user: any; loading: boolean }) {
                   <LockClockOutlinedIcon className="logo-lock" />
                   <p className="meta-label">Password Reset Required</p>
                 </div>
-                <p className={`item-active ${user?.isResetPassAllowed ? "active" : ""}`}>
+                <p
+                  className={`item-active ${
+                    user?.isResetPassAllowed ? "active" : ""
+                  }`}
+                >
                   {user?.isResetPassAllowed ? "Active" : "Inactive"}
                 </p>
               </div>
@@ -307,20 +323,84 @@ function LoginInformation({ user, loading }: { user: any; loading: boolean }) {
   );
 }
 
-function PointInformation({ user, loading, onShowHistory }: { user: any; loading: boolean; onShowHistory: () => void }) {
+function PointInformation({
+  user,
+  loading,
+  onShowHistory,
+  onEditPoints,
+}: {
+  user: any;
+  loading: boolean;
+  onShowHistory: () => void;
+  onEditPoints: () => void;
+}) {
   return (
     <div className="point-information">
-      <p className="label">Point Information</p>
+      <div className="header">
+        <p className="label">Point Information</p>
+        {!loading && (
+          <IconButton className="btn-edit" onClick={onEditPoints}>
+            <EditOutlinedIcon />
+          </IconButton>
+        )}
+      </div>
       <div className="point-information-content">
         <div className="point-item">
-          {loading ? <Skeleton width={50} /> : <p className="point-value">{user?.points || 0}</p>}
+          {loading ? (
+            <Skeleton width={50} />
+          ) : (
+            <p className="point-value">{user?.points || 0}</p>
+          )}
           <p className="point-label">Total Points Earned</p>
         </div>
         <div className="point-item">
-          <Button variant="contained" className="btn-view-history" onClick={onShowHistory}>
+          <Button
+            variant="contained"
+            className="btn-view-history"
+            onClick={onShowHistory}
+          >
             View History
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function RecordsSection({
+  loading,
+  onViewRecord,
+}: {
+  loading: boolean;
+  onViewRecord: (record: string) => void;
+}) {
+  const records = [
+    "Active Calories",
+    "Distance",
+    "Exercise Session",
+    "Heart Rate",
+    "Oxygen Saturation",
+    "Resting Heart Rate",
+    "Sleep Session",
+    "Steps",
+    "Total Calories",
+  ];
+
+  return (
+    <div className="records-section">
+      <p className="label">Records</p>
+      <div className="records-grid">
+        {records.map((record) => (
+          <Button
+            key={record}
+            variant="outlined"
+            className="record-button"
+            onClick={() => onViewRecord(record)}
+            disabled={loading}
+          >
+            {`View ${record}`}
+          </Button>
+        ))}
       </div>
     </div>
   );
@@ -335,7 +415,9 @@ function ChatHistoryLog({ loading, stats }: { loading: boolean; stats: any }) {
           {loading ? (
             <Skeleton width={50} />
           ) : (
-            <p className="session-value session-value-expert">{stats?.total_chat_sessions || 0}</p>
+            <p className="session-value session-value-expert">
+              {stats?.total_chat_sessions || 0}
+            </p>
           )}
           <p className="session-label">with Experts</p>
           <p className="session-viewmore">View more</p>
@@ -344,7 +426,9 @@ function ChatHistoryLog({ loading, stats }: { loading: boolean; stats: any }) {
           {loading ? (
             <Skeleton width={50} />
           ) : (
-            <p className="session-value session-value-ai">{stats?.total_active_chat_sessions || 0}</p>
+            <p className="session-value session-value-ai">
+              {stats?.total_active_chat_sessions || 0}
+            </p>
           )}
           <p className="session-label">with AI</p>
           <p className="session-viewmore">View more</p>
@@ -357,6 +441,11 @@ function ChatHistoryLog({ loading, stats }: { loading: boolean; stats: any }) {
 export default function UsersDetailPage() {
   const [udeBasicProfile, setUdeBasicProfile] = useState(false);
   const [udePointsHistory, setUdePointsHistory] = useState(false);
+  const [userPointsEdit, setUserPointsEdit] = useState(false);
+  const [userRecordDialog, setUserRecordDialog] = useState<{
+    open: boolean;
+    record: string;
+  }>({ open: false, record: "" });
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { id } = useParams();
@@ -381,6 +470,23 @@ export default function UsersDetailPage() {
     setUdePointsHistory(true);
   };
 
+  const handleEditPoints = () => {
+    setUserPointsEdit(true);
+  };
+
+  const handlePointsUpdated = () => {
+    fetchUser();
+    setUserPointsEdit(false);
+  };
+
+  const handleViewRecord = (record: string) => {
+    setUserRecordDialog({ open: true, record });
+  };
+
+  const handleCloseRecordDialog = () => {
+    setUserRecordDialog({ open: false, record: "" });
+  };
+
   return (
     <div className="users-detail-page">
       <CommonBreadcrumb
@@ -395,7 +501,9 @@ export default function UsersDetailPage() {
           {loading ? (
             <Skeleton circle height={64} width={64} />
           ) : (
-            <Avatar className="avatar">{user?.username?.charAt(0) || "U"}</Avatar>
+            <Avatar className="avatar">
+              {user?.username?.charAt(0) || "U"}
+            </Avatar>
           )}
           <div>
             <div className="name">
@@ -404,14 +512,22 @@ export default function UsersDetailPage() {
               ) : (
                 <>
                   {user?.username}
-                  <span className={`status ${user?.is_active ? "active" : "inactive"}`}>
+                  <span
+                    className={`status ${
+                      user?.is_active ? "active" : "inactive"
+                    }`}
+                  >
                     {user?.is_active ? "Active" : "Inactive"}
                   </span>
                 </>
               )}
             </div>
             <div className="role">
-              {loading ? <Skeleton width={100} /> : user?.roles?.join(", ") || "No role"}
+              {loading ? (
+                <Skeleton width={100} />
+              ) : (
+                user?.roles?.join(", ") || "No role"
+              )}
             </div>
             <div className="id">
               {loading ? <Skeleton width={120} /> : `ID: ${user?.id || "N/A"}`}
@@ -421,7 +537,11 @@ export default function UsersDetailPage() {
         <div className="right">
           {loading ? (
             <>
-              <Skeleton width={120} height={36} style={{ marginRight: "10px" }} />
+              <Skeleton
+                width={120}
+                height={36}
+                style={{ marginRight: "10px" }}
+              />
               <Skeleton width={100} height={36} />
             </>
           ) : (
@@ -451,22 +571,17 @@ export default function UsersDetailPage() {
             loading={loading}
             onUdeBasicProfile={() => setUdeBasicProfile(true)}
           />
-          <PointInformation 
-            user={user} 
-            loading={loading} 
-            onShowHistory={handleShowHistory} 
+          <PointInformation
+            user={user}
+            loading={loading}
+            onShowHistory={handleShowHistory}
+            onEditPoints={handleEditPoints}
           />
-          <CommunityActivity 
-            loading={loading} 
-            stats={user?.stats} 
-          />
-          <ChatHistoryLog 
-            loading={loading} 
-            stats={user?.stats} 
-          />
+          <RecordsSection loading={loading} onViewRecord={handleViewRecord} />
+          <CommunityActivity loading={loading} stats={user?.stats} />
+          <ChatHistoryLog loading={loading} stats={user?.stats} />
         </div>
         <div className="row">
-          <ConnectedDevices loading={loading} />
           <LoginInformation user={user} loading={loading} />
         </div>
       </div>
@@ -483,6 +598,151 @@ export default function UsersDetailPage() {
             onClose={() => setUdePointsHistory(false)}
             userId={user.id}
           />
+          <UserPointsEdit
+            open={userPointsEdit}
+            onClose={() => setUserPointsEdit(false)}
+            userId={user.id}
+            onPointsUpdated={handlePointsUpdated}
+          />
+          {userRecordDialog.open &&
+            userRecordDialog.record === "Active Calories" && (
+              <CommonDialog
+                title="Active Calories Records"
+                maxWidth="lg"
+                open={userRecordDialog.open}
+                onClose={handleCloseRecordDialog}
+                footer={
+                  <Button variant="contained" onClick={handleCloseRecordDialog}>
+                    Close
+                  </Button>
+                }
+              >
+                <UserDetailRecordActiveCalories userId={user.id} />
+              </CommonDialog>
+            )}
+          {userRecordDialog.open &&
+            userRecordDialog.record === "Heart Rate" && (
+              <CommonDialog
+                title="Heart Rate Records"
+                maxWidth="lg"
+                open={userRecordDialog.open}
+                onClose={handleCloseRecordDialog}
+                footer={
+                  <Button variant="contained" onClick={handleCloseRecordDialog}>
+                    Close
+                  </Button>
+                }
+              >
+                <UserDetailRecordHeartRate userId={user.id} />
+              </CommonDialog>
+            )}
+          {userRecordDialog.open && userRecordDialog.record === "Distance" && (
+            <CommonDialog
+              title="Distance Records"
+              maxWidth="lg"
+              open={userRecordDialog.open}
+              onClose={handleCloseRecordDialog}
+              footer={
+                <Button variant="contained" onClick={handleCloseRecordDialog}>
+                  Close
+                </Button>
+              }
+            >
+              <UserDetailRecordDistance userId={user.id} />
+            </CommonDialog>
+          )}
+          {userRecordDialog.open &&
+            userRecordDialog.record === "Oxygen Saturation" && (
+              <CommonDialog
+                title="Oxygen Saturation (SpO2) Records"
+                maxWidth="lg"
+                open={userRecordDialog.open}
+                onClose={handleCloseRecordDialog}
+                footer={
+                  <Button variant="contained" onClick={handleCloseRecordDialog}>
+                    Close
+                  </Button>
+                }
+              >
+                <UserDetailRecordOxygenSaturation userId={user.id} />
+              </CommonDialog>
+            )}
+          {userRecordDialog.open &&
+            userRecordDialog.record === "Resting Heart Rate" && (
+              <CommonDialog
+                title="Resting Heart Rate Records"
+                maxWidth="lg"
+                open={userRecordDialog.open}
+                onClose={handleCloseRecordDialog}
+                footer={
+                  <Button variant="contained" onClick={handleCloseRecordDialog}>
+                    Close
+                  </Button>
+                }
+              >
+                <UserDetailRecordRestingHeartRate userId={user.id} />
+              </CommonDialog>
+            )}
+          {userRecordDialog.open && userRecordDialog.record === "Steps" && (
+            <CommonDialog
+              title="Steps Records"
+              maxWidth="lg"
+              open={userRecordDialog.open}
+              onClose={handleCloseRecordDialog}
+              footer={
+                <Button variant="contained" onClick={handleCloseRecordDialog}>
+                  Close
+                </Button>
+              }
+            >
+              <UserDetailRecordSteps userId={user.id} />
+            </CommonDialog>
+          )}
+          {userRecordDialog.open && userRecordDialog.record === "Total Calories" && (
+            <CommonDialog
+              title="Total Calories Burned Records"
+              maxWidth="lg"
+              open={userRecordDialog.open}
+              onClose={handleCloseRecordDialog}
+              footer={
+                <Button variant="contained" onClick={handleCloseRecordDialog}>
+                  Close
+                </Button>
+              }
+            >
+              <UserDetailRecordTotalCalories userId={user.id} />
+            </CommonDialog>
+          )}
+          {userRecordDialog.open && userRecordDialog.record === "Sleep Session" && (
+            <CommonDialog
+              title="Sleep Session Records"
+              maxWidth="lg"
+              open={userRecordDialog.open}
+              onClose={handleCloseRecordDialog}
+              footer={
+                <Button variant="contained" onClick={handleCloseRecordDialog}>
+                  Close
+                </Button>
+              }
+            >
+              <UserDetailRecordSleepSession userId={user.id} />
+            </CommonDialog>
+          )}
+          {userRecordDialog.open && userRecordDialog.record === "Exercise Session" && (
+            <CommonDialog
+              title="Exercise Session Records"
+              maxWidth="lg"
+              open={userRecordDialog.open}
+              onClose={handleCloseRecordDialog}
+              footer={
+                <Button variant="contained" onClick={handleCloseRecordDialog}>
+                  Close
+                </Button>
+              }
+            >
+              <UserDetailRecordExerciseSession userId={user.id} />
+            </CommonDialog>
+          )}
         </>
       )}
     </div>

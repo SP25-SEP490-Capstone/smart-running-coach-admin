@@ -125,7 +125,6 @@
   .personal-details,
   .community-activity,
   .point-information,
-  .connected-devices,
   .login-information,
   .chat-history-log {
     background-color: #fff;
@@ -241,6 +240,18 @@
   }
 
   .point-information {
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+  
+      .btn-edit {
+        color: $primary-dark-color;
+        padding: 4px;
+      }
+    }
+
     .point-information-content {
       display: flex;
       justify-content: space-between;
@@ -282,53 +293,36 @@
     }
   }
 
-  .connected-devices {
-    .device-meta {
-      margin-bottom: 15px;
-
-      &-label {
-        font-size: 14px;
-        color: #666;
-      }
-
-      &-value {
-        color: $primary-dark-color;
-        font-size: 22px;
-        font-weight: 700;
-      }
+  .records-section {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px 1.5rem;
+  
+    .label {
+      font-size: 19px;
+      color: $primary-dark-color;
+      font-weight: 600;
+      margin-bottom: 25px;
     }
-
-    .device-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-
-      .device-item {
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        padding: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        &-meta {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-
-          .device-icon {
-            color: $primary-dark-color;
-          }
-        }
-
-        &-status {
-          font-size: 14px;
-          color: #666;
-
-          &.active {
-            color: #2e7d32;
-          }
+  
+    .records-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+  
+      .record-button {
+        text-transform: none;
+        justify-content: center;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        color: $primary-dark-color;
+        border-color: rgba(0, 0, 0, 0.12);
+  
+        &:hover {
+          background-color: $primary-dark-color;
+          color: white;
         }
       }
     }
@@ -445,6 +439,22 @@
           text-decoration: underline;
         }
       }
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .records-section {
+    .records-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .records-section {
+    .records-grid {
+      grid-template-columns: 1fr;
     }
   }
 }
