@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react";
 import "./PostsDetailPage.scss";
-import { 
-  Avatar, 
-  Button, 
-  Typography, 
-  Box, 
-  Select, 
-  MenuItem, 
-  IconButton, 
-  Menu, 
+import {
+  Avatar,
+  Button,
+  Typography,
+  Box,
+  Select,
+  MenuItem,
+  IconButton,
+  Menu,
   TextField,
   Chip,
   Divider,
   Card,
   CardContent,
-  Grid
+  Grid,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
@@ -90,7 +90,8 @@ interface Comment {
 export default function PostsDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [post, setPost] = useState<PostData | null>(null);
-  const [exerciseSession, setExerciseSession] = useState<ExerciseSession | null>(null);
+  const [exerciseSession, setExerciseSession] =
+    useState<ExerciseSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -99,7 +100,9 @@ export default function PostsDetailPage() {
   const [editPostDialogOpen, setEditPostDialogOpen] = useState(false);
   const [editCommentDialogOpen, setEditCommentDialogOpen] = useState(false);
   const [removeCommentDialogOpen, setRemoveCommentDialogOpen] = useState(false);
-  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
+  const [expandedReplies, setExpandedReplies] = useState<
+    Record<string, boolean>
+  >({});
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchPost = async () => {
@@ -107,16 +110,17 @@ export default function PostsDetailPage() {
       setLoading(true);
       const response = await aget(`/posts/${id}`);
       setPost(response.data.data);
-      
+
       // If post has an exercise session, fetch that data
       if (response.data.data.exercise_session_record_id) {
-        await fetchExerciseSession(response.data.data.exercise_session_record_id);
+        await fetchExerciseSession(
+          response.data.data.exercise_session_record_id
+        );
       }
-      
+
       // TODO: Fetch comments for this post
       // const commentsResponse = await aget(`/posts/${id}/comments`);
       // setComments(commentsResponse.data.data);
-      
     } catch (err) {
       setError("Failed to load post data");
       console.error(err);
@@ -140,7 +144,8 @@ export default function PostsDetailPage() {
     }
   }, [id]);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) =>
+    setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
   const handleRemovePostClick = () => setRemovePostDialogOpen(true);
@@ -173,8 +178,10 @@ export default function PostsDetailPage() {
       // await apost(`/posts/${post.id}/upvote`);
       setPost({
         ...post,
-        upvote_count: post.is_upvoted ? post.upvote_count - 1 : post.upvote_count + 1,
-        is_upvoted: !post.is_upvoted
+        upvote_count: post.is_upvoted
+          ? post.upvote_count - 1
+          : post.upvote_count + 1,
+        is_upvoted: !post.is_upvoted,
       });
     } catch (err) {
       console.error("Failed to upvote", err);
@@ -183,7 +190,7 @@ export default function PostsDetailPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   };
 
   const filteredComments = comments.filter(
@@ -205,15 +212,19 @@ export default function PostsDetailPage() {
   }
 
   // Prepare map data if exercise session exists with routes
-  const mapCenter = exerciseSession?.routes?.length > 0 ? {
-    lat: exerciseSession.routes[0].latitude,
-    lng: exerciseSession.routes[0].longitude
-  } : { lat: 0, lng: 0 };
+  const mapCenter =
+    exerciseSession?.routes?.length > 0
+      ? {
+          lat: exerciseSession.routes[0].latitude,
+          lng: exerciseSession.routes[0].longitude,
+        }
+      : { lat: 0, lng: 0 };
 
-  const pathCoordinates = exerciseSession?.routes?.map(route => ({
-    lat: route.latitude,
-    lng: route.longitude
-  })) || [];
+  const pathCoordinates =
+    exerciseSession?.routes?.map((route) => ({
+      lat: route.latitude,
+      lng: route.longitude,
+    })) || [];
 
   return (
     <Box className="posts-detail-page">
@@ -226,10 +237,14 @@ export default function PostsDetailPage() {
       />
 
       <Box className="post-card">
-        <Typography variant="h4" className="post-title">{post.title}</Typography>
-        
+        <Typography variant="h4" className="post-title">
+          {post.title}
+        </Typography>
+
         <Box className="post-meta">
-          <Avatar className="avatar">{post.user.username.charAt(0).toUpperCase()}</Avatar>
+          <Avatar className="avatar">
+            {post.user.username.charAt(0).toUpperCase()}
+          </Avatar>
           <Link to={`/users/${post.user.id}`}>
             <Typography className="author">{post.user.username}</Typography>
           </Link>
@@ -245,12 +260,19 @@ export default function PostsDetailPage() {
 
         <Box className="post-stats">
           <Box className="stat-box" onClick={handleUpvote}>
-            <ThumbUpIcon fontSize="small" color={post.is_upvoted ? "primary" : "inherit"} />
-            <Typography variant="caption">{post.upvote_count} Upvotes</Typography>
+            <ThumbUpIcon
+              fontSize="small"
+              color={post.is_upvoted ? "primary" : "inherit"}
+            />
+            <Typography variant="caption">
+              {post.upvote_count} Upvotes
+            </Typography>
           </Box>
           <Box className="stat-box">
             <ChatBubbleOutlineIcon fontSize="small" />
-            <Typography variant="caption">{post.comment_count} Comments</Typography>
+            <Typography variant="caption">
+              {post.comment_count} Comments
+            </Typography>
           </Box>
         </Box>
 
@@ -259,7 +281,12 @@ export default function PostsDetailPage() {
         {post.images?.length > 0 && (
           <Box className="post-images">
             {post.images.map((image, index) => (
-              <img key={index} src={image} alt={`Post image ${index + 1}`} className="post-image" />
+              <img
+                key={index}
+                src={image}
+                alt={`Post image ${index + 1}`}
+                className="post-image"
+              />
             ))}
           </Box>
         )}
@@ -269,13 +296,15 @@ export default function PostsDetailPage() {
             <Typography variant="h6" className="session-title">
               <DirectionsRunIcon /> Exercise Session Details
             </Typography>
-            
+
             <Grid container spacing={2} className="session-stats">
               <Grid item xs={6} sm={3}>
                 <Card variant="outlined" className="stat-card">
                   <CardContent>
                     <TimerIcon color="primary" />
-                    <Typography variant="h6">{exerciseSession.duration_minutes} min</Typography>
+                    <Typography variant="h6">
+                      {exerciseSession.duration_minutes} min
+                    </Typography>
                     <Typography variant="caption">Duration</Typography>
                   </CardContent>
                 </Card>
@@ -284,7 +313,9 @@ export default function PostsDetailPage() {
                 <Card variant="outlined" className="stat-card">
                   <CardContent>
                     <TerrainIcon color="primary" />
-                    <Typography variant="h6">{(exerciseSession.total_distance / 1000).toFixed(2)} km</Typography>
+                    <Typography variant="h6">
+                      {(exerciseSession.total_distance / 1000).toFixed(2)} km
+                    </Typography>
                     <Typography variant="caption">Distance</Typography>
                   </CardContent>
                 </Card>
@@ -293,7 +324,9 @@ export default function PostsDetailPage() {
                 <Card variant="outlined" className="stat-card">
                   <CardContent>
                     <LocalFireDepartmentIcon color="primary" />
-                    <Typography variant="h6">{exerciseSession.total_calories}</Typography>
+                    <Typography variant="h6">
+                      {exerciseSession.total_calories}
+                    </Typography>
                     <Typography variant="caption">Calories</Typography>
                   </CardContent>
                 </Card>
@@ -302,7 +335,9 @@ export default function PostsDetailPage() {
                 <Card variant="outlined" className="stat-card">
                   <CardContent>
                     <SpeedIcon color="primary" />
-                    <Typography variant="h6">{exerciseSession.avg_pace} min/km</Typography>
+                    <Typography variant="h6">
+                      {exerciseSession.avg_pace} min/km
+                    </Typography>
                     <Typography variant="caption">Avg Pace</Typography>
                   </CardContent>
                 </Card>
@@ -315,9 +350,15 @@ export default function PostsDetailPage() {
                   <FavoriteIcon color="error" /> Heart Rate
                 </Typography>
                 <Box className="heart-rate-stats">
-                  <Typography>Min: {exerciseSession.heart_rate.min} bpm</Typography>
-                  <Typography>Avg: {exerciseSession.heart_rate.avg} bpm</Typography>
-                  <Typography>Max: {exerciseSession.heart_rate.max} bpm</Typography>
+                  <Typography>
+                    Min: {exerciseSession.heart_rate.min} bpm
+                  </Typography>
+                  <Typography>
+                    Avg: {exerciseSession.heart_rate.avg} bpm
+                  </Typography>
+                  <Typography>
+                    Max: {exerciseSession.heart_rate.max} bpm
+                  </Typography>
                 </Box>
               </Box>
             )}
@@ -326,7 +367,7 @@ export default function PostsDetailPage() {
               <Box className="map-container">
                 <Typography variant="subtitle1">Route Map</Typography>
                 <GoogleMap
-                  mapContainerStyle={{ width: '100%', height: '300px' }}
+                  mapContainerStyle={{ width: "100%", height: "300px" }}
                   center={mapCenter}
                   zoom={14}
                 >
@@ -341,7 +382,10 @@ export default function PostsDetailPage() {
                   {pathCoordinates.length > 0 && (
                     <>
                       <Marker position={pathCoordinates[0]} label="S" />
-                      <Marker position={pathCoordinates[pathCoordinates.length - 1]} label="E" />
+                      <Marker
+                        position={pathCoordinates[pathCoordinates.length - 1]}
+                        label="E"
+                      />
                     </>
                   )}
                 </GoogleMap>
@@ -351,16 +395,31 @@ export default function PostsDetailPage() {
         )}
 
         <Box className="post-actions">
-          <Button variant="contained" color="primary" startIcon={<EditIcon />} onClick={handleEditPostClick}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<EditIcon />}
+            onClick={handleEditPostClick}
+          >
             Edit Post
           </Button>
-          <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={handleRemovePostClick}>
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={handleRemovePostClick}
+          >
             Remove Post
           </Button>
         </Box>
 
-        <Box className='post-mod-container'>
-          <Select defaultValue="" displayEmpty className="removal-reason" size="small">
+        <Box className="post-mod-container">
+          <Select
+            defaultValue=""
+            displayEmpty
+            className="removal-reason"
+            size="small"
+          >
             <MenuItem value="">Select a reason...</MenuItem>
             <MenuItem value="inappropriate">Inappropriate Content</MenuItem>
             <MenuItem value="spam">Spam</MenuItem>
@@ -393,66 +452,104 @@ export default function PostsDetailPage() {
         {filteredComments.length > 0 ? (
           filteredComments.map((comment) => (
             <Box key={comment.id} className="comment">
-              <Avatar className="comment-avatar">{comment.name.charAt(0).toUpperCase()}</Avatar>
+              <Avatar className="comment-avatar">
+                {comment.name.charAt(0).toUpperCase()}
+              </Avatar>
               <Box className="comment-content">
                 <Box className="comment-header">
                   <Link to={`/users/${comment.id}`}>
-                    <Typography className="comment-author">{comment.name}</Typography>
+                    <Typography className="comment-author">
+                      {comment.name}
+                    </Typography>
                   </Link>
-                  <Typography className="comment-time">{comment.time}</Typography>
+                  <Typography className="comment-time">
+                    {comment.time}
+                  </Typography>
                 </Box>
                 <Typography variant="body2">{comment.text}</Typography>
                 <Box className="comment-stats">
                   <IconButton size="small">
-                    <ThumbUpIcon fontSize="small" /> <Typography variant="caption">{comment.up}</Typography>
+                    <ThumbUpIcon fontSize="small" />{" "}
+                    <Typography variant="caption">{comment.up}</Typography>
                   </IconButton>
                   <IconButton size="small">
-                    <ThumbDownIcon fontSize="small" /> <Typography variant="caption">{comment.down}</Typography>
+                    <ThumbDownIcon fontSize="small" />{" "}
+                    <Typography variant="caption">{comment.down}</Typography>
                   </IconButton>
                   {comment.replies.length > 0 && (
-                    <IconButton size="small" onClick={() => handleToggleReplies(comment.id)}>
-                      <ChatBubbleOutlineIcon fontSize="small" /> 
-                      <Typography variant="caption">{comment.replies.length} replies</Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleToggleReplies(comment.id)}
+                    >
+                      <ChatBubbleOutlineIcon fontSize="small" />
+                      <Typography variant="caption">
+                        {comment.replies.length} replies
+                      </Typography>
                     </IconButton>
                   )}
                   <IconButton size="small" onClick={handleMenuOpen}>
                     <MoreVertIcon fontSize="small" />
                   </IconButton>
-                  <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                    <MenuItem onClick={handleEditCommentClick}>Edit Comment</MenuItem>
-                    <MenuItem onClick={handleRemoveCommentClick}>Remove Comment</MenuItem>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleMenuClose}
+                  >
+                    <MenuItem onClick={handleEditCommentClick}>
+                      Edit Comment
+                    </MenuItem>
+                    <MenuItem onClick={handleRemoveCommentClick}>
+                      Remove Comment
+                    </MenuItem>
                     <MenuItem onClick={handleMenuClose}>Report</MenuItem>
                   </Menu>
                 </Box>
 
-                {expandedReplies[comment.id] && comment.replies.map((reply) => (
-                  <Box key={reply.id} className="comment reply">
-                    <Avatar className="comment-avatar">{reply.name.charAt(0).toUpperCase()}</Avatar>
-                    <Box className="comment-content">
-                      <Box className="comment-header">
-                        <Link to={`/users/${reply.id}`}>
-                          <Typography className="comment-author">{reply.name}</Typography>
-                        </Link>
-                        <Typography className="comment-time">{reply.time}</Typography>
-                      </Box>
-                      <Typography variant="body2">{reply.text}</Typography>
-                      <Box className="comment-stats">
-                        <IconButton size="small">
-                          <ThumbUpIcon fontSize="small" /> <Typography variant="caption">{reply.up}</Typography>
-                        </IconButton>
-                        <IconButton size="small">
-                          <ThumbDownIcon fontSize="small" /> <Typography variant="caption">{reply.down}</Typography>
-                        </IconButton>
+                {expandedReplies[comment.id] &&
+                  comment.replies.map((reply) => (
+                    <Box key={reply.id} className="comment reply">
+                      <Avatar className="comment-avatar">
+                        {reply.name.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Box className="comment-content">
+                        <Box className="comment-header">
+                          <Link to={`/users/${reply.id}`}>
+                            <Typography className="comment-author">
+                              {reply.name}
+                            </Typography>
+                          </Link>
+                          <Typography className="comment-time">
+                            {reply.time}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2">{reply.text}</Typography>
+                        <Box className="comment-stats">
+                          <IconButton size="small">
+                            <ThumbUpIcon fontSize="small" />{" "}
+                            <Typography variant="caption">
+                              {reply.up}
+                            </Typography>
+                          </IconButton>
+                          <IconButton size="small">
+                            <ThumbDownIcon fontSize="small" />{" "}
+                            <Typography variant="caption">
+                              {reply.down}
+                            </Typography>
+                          </IconButton>
+                        </Box>
                       </Box>
                     </Box>
-                  </Box>
-                ))}
+                  ))}
               </Box>
             </Box>
           ))
         ) : (
-          <Typography variant="body2" color="textSecondary" className="no-comments">
-            No comments yet. Be the first to comment!
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            className="no-comments"
+          >
+            No comments yet.
           </Typography>
         )}
       </Box>
@@ -465,7 +562,12 @@ export default function PostsDetailPage() {
         footer={
           <>
             <Button onClick={handleDialogClose}>Cancel</Button>
-            <Button color="primary" onClick={() => { /* Handle post edit */ handleDialogClose(); }}>
+            <Button
+              color="primary"
+              onClick={() => {
+                /* Handle post edit */ handleDialogClose();
+              }}
+            >
               Save
             </Button>
           </>
@@ -497,7 +599,12 @@ export default function PostsDetailPage() {
         footer={
           <>
             <Button onClick={handleDialogClose}>Cancel</Button>
-            <Button color="error" onClick={() => { /* Handle post removal */ handleDialogClose(); }}>
+            <Button
+              color="error"
+              onClick={() => {
+                /* Handle post removal */ handleDialogClose();
+              }}
+            >
               Remove
             </Button>
           </>
@@ -514,7 +621,12 @@ export default function PostsDetailPage() {
         footer={
           <>
             <Button onClick={handleDialogClose}>Cancel</Button>
-            <Button color="primary" onClick={() => { /* Handle comment edit */ handleDialogClose(); }}>
+            <Button
+              color="primary"
+              onClick={() => {
+                /* Handle comment edit */ handleDialogClose();
+              }}
+            >
               Save
             </Button>
           </>
@@ -537,7 +649,12 @@ export default function PostsDetailPage() {
         footer={
           <>
             <Button onClick={handleDialogClose}>Cancel</Button>
-            <Button color="error" onClick={() => { /* Handle comment removal */ handleDialogClose(); }}>
+            <Button
+              color="error"
+              onClick={() => {
+                /* Handle comment removal */ handleDialogClose();
+              }}
+            >
               Remove
             </Button>
           </>
