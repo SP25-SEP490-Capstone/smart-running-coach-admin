@@ -43,7 +43,11 @@ import UserDetailRecordSteps from "./UsersDetailRecords/UserDetailRecordSteps";
 import UserDetailRecordTotalCalories from "./UsersDetailRecords/UserDetailRecordTotalCalories";
 import UserDetailRecordSleepSession from "./UsersDetailRecords/UserDetailRecordSleepSession";
 import UserDetailRecordExerciseSession from "./UsersDetailRecords/UserDetailRecordExerciseSession";
-import { sendErrorToast, sendSuccessToast } from "@components/utils/util_toastify";
+import UDESuspendDialog from "./UsersSuspend/UDESuspendDialog";
+import {
+  sendErrorToast,
+  sendSuccessToast,
+} from "@components/utils/util_toastify";
 
 function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
   const getGenderIcon = () => {
@@ -204,13 +208,13 @@ function PersonalDetails({ user, loading, onUdeBasicProfile }: any) {
   );
 }
 
-function ExpertApproval({ 
-  user, 
+function ExpertApproval({
+  user,
   loading,
   onApproveExpert,
-  onRevokeExpert 
-}: { 
-  user: any; 
+  onRevokeExpert,
+}: {
+  user: any;
   loading: boolean;
   onApproveExpert: () => void;
   onRevokeExpert: () => void;
@@ -220,8 +224,8 @@ function ExpertApproval({
 
   useEffect(() => {
     if (user) {
-      const hasExpertRole = user?.roles?.some((role: string) => 
-        role.toLowerCase() === 'expert'
+      const hasExpertRole = user?.roles?.some(
+        (role: string) => role.toLowerCase() === "expert"
       );
       setIsExpert(hasExpertRole);
     }
@@ -251,15 +255,18 @@ function ExpertApproval({
         ) : (
           <div className="toggle-container">
             <p className="status-text">
-              Status: <span className={isExpert ? 'approved' : 'not-approved'}>{isExpert ? 'Approved' : 'Not Approved'}</span>
+              Status:{" "}
+              <span className={isExpert ? "approved" : "not-approved"}>
+                {isExpert ? "Approved" : "Not Approved"}
+              </span>
             </p>
             <Button
               variant="contained"
               className="toggle-button"
-              color={isExpert ? 'error' : 'primary'}
+              color={isExpert ? "error" : "primary"}
               onClick={handleToggle}
             >
-              {isExpert ? 'Revoke Approval' : 'Approve as Expert'}
+              {isExpert ? "Revoke Approval" : "Approve as Expert"}
             </Button>
           </div>
         )}
@@ -271,24 +278,19 @@ function ExpertApproval({
         title="Confirm Expert Approval"
         maxWidth="sm"
         footer={
-          <Box style={{display: 'flex', gap: 10}}>
-            <Button 
-              variant="outlined" 
-              onClick={() => setConfirmDialog(false)}
-            >
+          <Box style={{ display: "flex", gap: 10 }}>
+            <Button variant="outlined" onClick={() => setConfirmDialog(false)}>
               Cancel
             </Button>
-            <Button 
-              variant="contained" 
-              color="primary"
-              onClick={handleConfirm}
-            >
+            <Button variant="contained" color="primary" onClick={handleConfirm}>
               Confirm
             </Button>
           </Box>
         }
       >
-        <p style={{ padding: '1rem' }}>Are you sure you want to approve this user as an expert?</p>
+        <p style={{ padding: "1rem" }}>
+          Are you sure you want to approve this user as an expert?
+        </p>
       </CommonDialog>
     </div>
   );
@@ -533,6 +535,7 @@ export default function UsersDetailPage() {
   const [udeBasicProfile, setUdeBasicProfile] = useState(false);
   const [udePointsHistory, setUdePointsHistory] = useState(false);
   const [userPointsEdit, setUserPointsEdit] = useState(false);
+  const [suspendDialog, setSuspendDialog] = useState(false);
   const [userRecordDialog, setUserRecordDialog] = useState<{
     open: boolean;
     record: string;
@@ -664,15 +667,9 @@ export default function UsersDetailPage() {
                 variant="contained"
                 startIcon={<DoNotDisturbAltIcon />}
                 className="btn-suspend"
+                onClick={() => setSuspendDialog(true)}
               >
-                Suspend
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<DeleteOutlineIcon />}
-                className="btn-delete"
-              >
-                Delete
+                {user?.is_active ? "Suspend" : "Activate"}
               </Button>
             </>
           )}
@@ -818,50 +815,63 @@ export default function UsersDetailPage() {
               <UserDetailRecordSteps userId={user.id} />
             </CommonDialog>
           )}
-          {userRecordDialog.open && userRecordDialog.record === "Total Calories" && (
-            <CommonDialog
-              title="Total Calories Burned Records"
-              maxWidth="lg"
-              open={userRecordDialog.open}
-              onClose={handleCloseRecordDialog}
-              footer={
-                <Button variant="contained" onClick={handleCloseRecordDialog}>
-                  Close
-                </Button>
-              }
-            >
-              <UserDetailRecordTotalCalories userId={user.id} />
-            </CommonDialog>
-          )}
-          {userRecordDialog.open && userRecordDialog.record === "Sleep Session" && (
-            <CommonDialog
-              title="Sleep Session Records"
-              maxWidth="lg"
-              open={userRecordDialog.open}
-              onClose={handleCloseRecordDialog}
-              footer={
-                <Button variant="contained" onClick={handleCloseRecordDialog}>
-                  Close
-                </Button>
-              }
-            >
-              <UserDetailRecordSleepSession userId={user.id} />
-            </CommonDialog>
-          )}
-          {userRecordDialog.open && userRecordDialog.record === "Exercise Session" && (
-            <CommonDialog
-              title="Exercise Session Records"
-              maxWidth="lg"
-              open={userRecordDialog.open}
-              onClose={handleCloseRecordDialog}
-              footer={
-                <Button variant="contained" onClick={handleCloseRecordDialog}>
-                  Close
-                </Button>
-              }
-            >
-              <UserDetailRecordExerciseSession userId={user.id} />
-            </CommonDialog>
+          {userRecordDialog.open &&
+            userRecordDialog.record === "Total Calories" && (
+              <CommonDialog
+                title="Total Calories Burned Records"
+                maxWidth="lg"
+                open={userRecordDialog.open}
+                onClose={handleCloseRecordDialog}
+                footer={
+                  <Button variant="contained" onClick={handleCloseRecordDialog}>
+                    Close
+                  </Button>
+                }
+              >
+                <UserDetailRecordTotalCalories userId={user.id} />
+              </CommonDialog>
+            )}
+          {userRecordDialog.open &&
+            userRecordDialog.record === "Sleep Session" && (
+              <CommonDialog
+                title="Sleep Session Records"
+                maxWidth="lg"
+                open={userRecordDialog.open}
+                onClose={handleCloseRecordDialog}
+                footer={
+                  <Button variant="contained" onClick={handleCloseRecordDialog}>
+                    Close
+                  </Button>
+                }
+              >
+                <UserDetailRecordSleepSession userId={user.id} />
+              </CommonDialog>
+            )}
+          {userRecordDialog.open &&
+            userRecordDialog.record === "Exercise Session" && (
+              <CommonDialog
+                title="Exercise Session Records"
+                maxWidth="lg"
+                open={userRecordDialog.open}
+                onClose={handleCloseRecordDialog}
+                footer={
+                  <Button variant="contained" onClick={handleCloseRecordDialog}>
+                    Close
+                  </Button>
+                }
+              >
+                <UserDetailRecordExerciseSession userId={user.id} />
+              </CommonDialog>
+            )}
+
+          {suspendDialog && (
+            <UDESuspendDialog
+              open={suspendDialog}
+              onClose={() => setSuspendDialog(false)}
+              userId={user.id}
+              isActive={user.is_active}
+              onSuspendSuccess={fetchUser}
+            />
           )}
         </>
       )}

@@ -1,0 +1,31 @@
+.common-avatar {
+  position: relative;
+  display: inline-flex;
+
+  .avatar-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .avatar-image {
+    background-color: #f0f0f0;
+  }
+
+  .role-badge {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid white;
+    border-radius: 50%;
+
+    &.expert-badge {
+      background-color: #ffb300;
+    }
+
+    &.runner-badge {
+      background-color: #199500;
+    }
+  }
+}

@@ -13,8 +13,6 @@ import {
   Typography,
   Avatar,
 } from "@mui/material";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
 import "./NewsDetailEditPage.scss";
 import CommonBreadcrumb from "@components/commons/CommonBreadcrumb";
 import CommonTextEditor from "@components/commons/CommonTextEditor";
@@ -22,11 +20,7 @@ import CommonDialog from "@components/commons/CommonDialog";
 import { aget, aput } from "@components/utils/util_axios";
 import { sendErrorToast, sendSuccessToast } from "@components/utils/util_toastify";
 
-interface NewsType {
-  id: string;
-  type_name: string;
-  description: string;
-}
+type NewsType = 'OFFICIAL' | 'EVENT' | 'WARNING' | 'MISCELLANEOUS';
 
 interface Template {
   id: string;
@@ -35,110 +29,86 @@ interface Template {
   description?: string;
 }
 
+const NEWS_TYPES = [
+  { id: 'OFFICIAL', label: 'Official Announcement' },
+  { id: 'EVENT', label: 'Event' },
+  { id: 'WARNING', label: 'Warning' },
+  { id: 'MISCELLANEOUS', label: 'Miscellaneous' }
+];
+
+const TEMPLATES: Template[] = [
+  {
+    id: '1',
+    name: 'Announcement Template',
+    description: 'Standard format for company announcements',
+    content: `## [Announcement Title]\n\nWe are pleased to announce that [details]. Effective from [date].\n\nKey points:\n- Point 1\n- Point 2\n\nContact: [email/phone]`
+  },
+  {
+    id: '2',
+    name: 'Event Invitation',
+    description: 'Template for inviting to events',
+    content: `## You're Invited: [Event Name]\n\n**Date:** [Date]\n**Time:** [Time]\n**Location:** [Venue]\n\nJoin us for [description].\n\nRSVP by [date] to [contact].`
+  },
+  {
+    id: '3',
+    name: 'Policy Update',
+    description: 'Template for policy changes',
+    content: `## Policy Update: [Policy Name]\n\nEffective [date]:\n\n### Changes:\n1. Change 1\n2. Change 2\n\n### Reason:\n[Explanation]\n\nContact: [HR/contact]`
+  }
+];
+
 export default function NewsDetailEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
-  const [selectedType, setSelectedType] = useState<NewsType | null>(null);
+  const [newsType, setNewsType] = useState<NewsType>('OFFICIAL');
   const [content, setContent] = useState("");
-  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [newsTypes, setNewsTypes] = useState<NewsType[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Enhanced templates with descriptions
-  const templates: Template[] = [
-    {
-      id: '1',
-      name: 'Announcement Template',
-      description: 'Standard format for company announcements',
-      content: `## [Announcement Title]\n\nWe are pleased to announce that [details of announcement]. This change will be effective from [date].\n\nKey points:\n- Point 1\n- Point 2\n- Point 3\n\nFor more information, please contact [contact person] at [email/phone].`
-    },
-    {
-      id: '2',
-      name: 'Event Invitation',
-      description: 'Template for inviting employees to company events',
-      content: `## You're Invited: [Event Name]\n\n**Date:** [Date]\n**Time:** [Time]\n**Location:** [Venue]\n\nJoin us for [description of event]. This will be a great opportunity to [benefits of attending].\n\nRSVP by [date] to [contact person].\n\nWe look forward to seeing you there!`
-    },
-    {
-      id: '3',
-      name: 'Policy Update',
-      description: 'Template for communicating policy changes',
-      content: `## Policy Update: [Policy Name]\n\nEffective [date], we are implementing the following changes to our [policy name] policy:\n\n### Changes:\n1. Change 1\n2. Change 2\n3. Change 3\n\n### Reason for Changes:\n[Explanation of why changes were made]\n\n### Impact:\n[How this affects employees/departments]\n\nFor questions, please reach out to [HR/contact person].`
-    }
-  ];
-
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchArticle = async () => {
       try {
         setLoading(true);
         setError(null);
-
-        // Fetch news types and article data in parallel
-        const [typesResponse, articleResponse] = await Promise.all([
-          aget("/news/types"),
-          aget(`/news/${id}`),
-        ]);
-
-        console.log(articleResponse)
-
-        setNewsTypes(typesResponse.data.data);
-
-        const articleData = articleResponse.data.data;
-        setTitle(articleData.title);
-        setContent(articleData.content);
-
-        // Find and set the news type
-        const type = typesResponse.data.data.find(
-          (t) => t.id === articleData.news_type_id
-        );
-        setSelectedType(type || null);
+        
+        const response = await aget(`/news/admin/${id}`);
+        const article = response.data.data;
+        
+        setTitle(article.title);
+        setContent(article.content);
+        setNewsType(article.news_type);
       } catch (err) {
-        console.error("Failed to fetch data:", err);
-        setError("Failed to load article data. Please try again.");
+        console.error("Failed to fetch article:", err);
+        setError("Failed to load article. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchArticle();
   }, [id]);
 
   const handleSubmit = async (isDraft: boolean) => {
-    if (!selectedType) {
-      sendErrorToast("Please select a news type");
-      return;
-    }
-
-    if (!title.trim()) {
-      sendErrorToast("Title is required");
-      return;
-    }
-
-    if (!content.trim()) {
-      sendErrorToast("Content is required");
-      return;
-    }
+    if (!title.trim()) return sendErrorToast("Title is required");
+    if (!content.trim()) return sendErrorToast("Content is required");
 
     setSubmitting(true);
 
     try {
       const response = await aput(`/news/admin/${id}`, {
-        newsTypeId: selectedType.id,
         title,
         content,
+        newsType,
         isDraft,
         archive: false,
       });
 
       if (response.status === 200) {
-        sendSuccessToast(
-          `News ${isDraft ? "draft saved" : "updated"} successfully!`
-        );
+        sendSuccessToast(`News ${isDraft ? "draft saved" : "updated"} successfully!`);
         navigate("/news");
-      } else {
-        throw new Error(response.data?.message || "Failed to update news");
       }
     } catch (err) {
       console.error("Failed to update news:", err);
@@ -148,18 +118,9 @@ export default function NewsDetailEditPage() {
     }
   };
 
-  const handleTemplateSelect = (template: Template) => {
-    setContent(prev => {
-      if (prev) {
-        return `${prev}\n\n${template.content}`;
-      }
-      return template.content;
-    });
-    setTemplateDialogOpen(false);
-  };
-
-  const capitalizeFirstLetter = (string: string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+  const insertTemplate = (template: Template) => {
+    setContent(prev => prev ? `${prev}\n\n${template.content}` : template.content);
+    setShowTemplates(false);
   };
 
   if (error) {
@@ -171,21 +132,12 @@ export default function NewsDetailEditPage() {
             { name: "Edit News" }
           ]}
         />
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          height="50vh"
-        >
+        <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
           <Box textAlign="center">
             <Typography variant="h6" color="error" gutterBottom>
               {error}
             </Typography>
-            <Button
-              variant="contained"
-              onClick={() => window.location.reload()}
-              sx={{ mt: 2 }}
-            >
+            <Button variant="contained" onClick={() => window.location.reload()} sx={{ mt: 2 }}>
               Retry
             </Button>
           </Box>
@@ -206,27 +158,31 @@ export default function NewsDetailEditPage() {
         <Box className="news-container">
           <Box className="form-group form-group-meta">
             <Box className="form-field">
-              <Skeleton width={80} height={24} />
-              <Skeleton height={56} />
+              <Typography variant="body2" component="div">
+                <Box width={80} height={24} bgcolor="action.disabledBackground" mb={1} />
+                <Box width="100%" height={56} bgcolor="action.disabledBackground" />
+              </Typography>
             </Box>
             <Box className="form-field">
-              <Skeleton width={80} height={24} />
-              <Skeleton height={56} />
+              <Typography variant="body2" component="div">
+                <Box width={80} height={24} bgcolor="action.disabledBackground" mb={1} />
+                <Box width="100%" height={56} bgcolor="action.disabledBackground" />
+              </Typography>
             </Box>
           </Box>
 
           <Box className="form-group">
             <Box display="flex" justifyContent="space-between" mb={2}>
-              <Skeleton width={80} height={24} />
-              <Skeleton width={120} height={36} />
+              <Box width={80} height={24} bgcolor="action.disabledBackground" />
+              <Box width={120} height={36} bgcolor="action.disabledBackground" />
             </Box>
-            <Skeleton height={300} />
+            <Box width="100%" height={300} bgcolor="action.disabledBackground" />
           </Box>
 
           <Box className="container-foooter">
             <Box className="btn-container">
-              <Skeleton width={120} height={36} sx={{ mr: 2 }} />
-              <Skeleton width={120} height={36} />
+              <Box width={120} height={36} bgcolor="action.disabledBackground" sx={{ mr: 2 }} />
+              <Box width={120} height={36} bgcolor="action.disabledBackground" />
             </Box>
           </Box>
         </Box>
@@ -249,19 +205,14 @@ export default function NewsDetailEditPage() {
           <Box className="form-field">
             <label>News Type</label>
             <Select
-              className="form-field-tag"
               fullWidth
-              value={selectedType?.id || ""}
-              onChange={(e) => {
-                const type = newsTypes.find((t) => t.id === e.target.value);
-                setSelectedType(type || null);
-              }}
+              value={newsType}
+              onChange={(e) => setNewsType(e.target.value as NewsType)}
               margin="normal"
-              error={!selectedType}
             >
-              {newsTypes.map((type) => (
+              {NEWS_TYPES.map((type) => (
                 <MenuItem key={type.id} value={type.id}>
-                  {capitalizeFirstLetter(type.type_name)}
+                  {type.label}
                 </MenuItem>
               ))}
             </Select>
@@ -273,10 +224,10 @@ export default function NewsDetailEditPage() {
               fullWidth
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="News title here"
+              placeholder="News title"
               margin="normal"
               error={!title.trim()}
-              helperText={!title.trim() ? "Title is required" : ""}
+              helperText={!title.trim() && "Title is required"}
             />
           </Box>
         </Box>
@@ -285,10 +236,9 @@ export default function NewsDetailEditPage() {
           <div className="content-label">
             <label>Content</label>
             <Button
-              className="btn-template"
               variant="outlined"
               color="primary"
-              onClick={() => setTemplateDialogOpen(true)}
+              onClick={() => setShowTemplates(true)}
               startIcon={<span>📋</span>}
             >
               Insert Template
@@ -296,58 +246,47 @@ export default function NewsDetailEditPage() {
           </div>
 
           <CommonTextEditor
-            defaultValue={content}
+            content={content}
+            onChange={setContent}
             maxLimit={2000}
-            onChange={(newContent) => setContent(newContent)}
             error={!content.trim()}
-            helperText={!content.trim() ? "Content is required" : ""}
+            helperText={!content.trim() && "Content is required"}
             height="400px"
           />
         </Box>
 
         <CommonDialog
-          open={templateDialogOpen}
-          onClose={() => setTemplateDialogOpen(false)}
-          title="Select a Template to Insert"
+          open={showTemplates}
+          onClose={() => setShowTemplates(false)}
+          title="Select a Template"
           maxWidth="md"
           fullWidth
           children={
             <Box sx={{ minHeight: '300px' }}>
-              {templates.length === 0 ? (
-                <Typography variant="body1" textAlign="center" py={4}>
-                  No templates available
-                </Typography>
-              ) : (
-                <List>
-                  {templates.map((template) => (
-                    <ListItem 
-                      key={template.id}
-                      button
-                      onClick={() => handleTemplateSelect(template)}
-                      sx={{
-                        '&:hover': {
-                          backgroundColor: 'action.hover',
-                        },
-                        mb: 1,
-                        borderRadius: 1
-                      }}
-                    >
-                      <ListItemText
-                        primary={template.name}
-                        secondary={template.description || 'No description'}
-                        primaryTypographyProps={{ fontWeight: 'medium' }}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              )}
+              <List>
+                {TEMPLATES.map((template) => (
+                  <ListItem 
+                    key={template.id}
+                    button
+                    onClick={() => insertTemplate(template)}
+                    sx={{
+                      '&:hover': { backgroundColor: 'action.hover' },
+                      mb: 1,
+                      borderRadius: 1
+                    }}
+                  >
+                    <ListItemText
+                      primary={template.name}
+                      secondary={template.description}
+                      primaryTypographyProps={{ fontWeight: 'medium' }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
             </Box>
           }
           footer={
-            <Button 
-              onClick={() => setTemplateDialogOpen(false)}
-              variant="outlined"
-            >
+            <Button onClick={() => setShowTemplates(false)} variant="outlined">
               Cancel
             </Button>
           }
@@ -362,9 +301,7 @@ export default function NewsDetailEditPage() {
           <Box className="btn-container">
             <Button
               variant="outlined"
-              color="primary"
               onClick={() => handleSubmit(true)}
-              className="btn-draft"
               disabled={submitting}
               sx={{ mr: 2 }}
             >
@@ -373,9 +310,7 @@ export default function NewsDetailEditPage() {
 
             <Button
               variant="contained"
-              color="primary"
               onClick={() => handleSubmit(false)}
-              className="btn-submit"
               disabled={submitting}
             >
               {submitting ? <CircularProgress size={24} /> : "Update News"}

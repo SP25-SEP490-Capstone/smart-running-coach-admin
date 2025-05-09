@@ -7,6 +7,7 @@ import { Box, Typography } from "@mui/material";
 
 interface CommonTextEditorProps {
   defaultValue?: string;
+  content?: string;
   height?: string;
   maxLimit?: number;
   onChange?: (content: string) => void;
@@ -29,6 +30,7 @@ const fontSizeArr = [
 
 export default function CommonTextEditor({
   defaultValue = "",
+  content,
   height = "300px",
   maxLimit = 2000,
   onChange,
@@ -67,6 +69,12 @@ export default function CommonTextEditor({
     // Set initial content
     if (defaultValue) {
       quill.clipboard.dangerouslyPasteHTML(defaultValue);
+    }
+
+    console.log(content)
+
+    if (content) {
+      quill.clipboard.dangerouslyPasteHTML(content);
     }
 
     // Handle text changes

@@ -15,7 +15,8 @@ import {
   MenuItem,
   Box,
   Typography,
-  Divider
+  Divider,
+  Chip,
 } from "@mui/material";
 import {
   Search,
@@ -25,59 +26,117 @@ import {
   Delete as DeleteIcon,
   Close,
   Check,
-  CalendarToday
+  CalendarToday,
+  EmojiEvents,
+  MilitaryTech,
 } from "@mui/icons-material";
 import "./UsersPage.scss";
 import { Link } from "react-router-dom";
 import { aget } from "@components/utils/util_axios";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 import { exportToExcel, prepareUserDataForExport } from "@utils/util_xlsx";
+import { capitalizeFirstLetter } from "@components/utils/util_format";
+import { CommonAvatar } from "@components/commons/CommonAvatar";
+import DoDisturbIcon from '@mui/icons-material/DoDisturb';
+
+interface User {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  image: { url: string } | null;
+  points: number;
+  user_level: string;
+  roles: string[];
+  created_at?: string;
+  is_active?: boolean;
+}
+
+interface ApiResponse {
+  success: boolean;
+  data: User[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
 
 export default function UsersPage() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState(null);
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortField, setSortField] = useState<string>("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
   const [filters, setFilters] = useState({
-    status: null,
-    role: null,
-    dateFrom: null,
-    dateTo: null
+    status: null as string | null,
+    role: null as string | null,
+    dateFrom: null as string | null,
+    dateTo: null as string | null,
   });
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+    params.append("page", (page + 1).toString());
+    params.append("limit", rowsPerPage.toString());
+
+    if (search) params.append("search", search);
+    if (sortField) params.append("sortBy", sortField);
+    if (sortOrder) params.append("sortOrder", sortOrder);
+    if (filters.role) params.append("role", filters.role);
+    if (filters.status) params.append("status", filters.status);
+    if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+    if (filters.dateTo) params.append("dateTo", filters.dateTo);
+
+    return params.toString();
+  };
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const queryString = buildQueryString();
+      const response = await aget<ApiResponse>(
+        `/users/admin/users?${queryString}`
+      );
+      if (response.data.success) {
+        setUsers(response.data.data);
+        setTotalUsers(response.data.pagination.total);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await aget('/users');
-        if (response.status === 200) {
-          setUsers(response.data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 500); // Debounce search
 
-    fetchUsers();
-  }, []);
+    return () => clearTimeout(timer);
+  }, [page, rowsPerPage, search, sortField, sortOrder, filters]);
 
-  const handleSort = (field) => {
+  const handleSort = (field: string) => {
     const isAsc = sortField === field && sortOrder === "asc";
     setSortField(field);
     setSortOrder(isAsc ? "desc" : "asc");
+    setPage(0); // Reset to first page when sorting changes
   };
 
-  const handleFilterClick = (event) => {
+  const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
     setFilterAnchorEl(event.currentTarget);
   };
 
@@ -86,7 +145,7 @@ export default function UsersPage() {
   };
 
   const applyFilters = () => {
-    setPage(0);
+    setPage(0); // Reset to first page when filters change
     handleFilterClose();
   };
 
@@ -95,110 +154,56 @@ export default function UsersPage() {
       status: null,
       role: null,
       dateFrom: null,
-      dateTo: null
+      dateTo: null,
     });
     setPage(0);
     handleFilterClose();
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return dayjs(dateString).format('MMM D, YYYY');
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "";
+    return dayjs(dateString).format("MMM D, YYYY");
   };
 
-  const formatDateTimeForExport = (dateString) => {
-    if (!dateString) return '';
-    return dayjs(dateString).format('MMM D, YYYY h:mm A');
+  const formatDateTimeForExport = (dateString?: string) => {
+    if (!dateString) return "";
+    return dayjs(dateString).format("MMM D, YYYY h:mm A");
   };
 
-  const getRole = (userRoles) => {
-    if (!userRoles || userRoles.length === 0) return 'User';
-    const roles = userRoles.map(ur => ur.Role?.role_name);
-    if (roles.includes('admin')) return 'Admin';
-    if (roles.includes('runner')) return 'Runner';
-    if (roles.includes('expert')) return 'Expert';
-    return roles[0] || 'User';
+  const getRole = (roles: string[]) => {
+    if (!roles || roles.length === 0) return "User";
+    if (roles.includes("ADMIN")) return "Admin";
+    if (roles.includes("RUNNER")) return "Runner";
+    if (roles.includes("EXPERT")) return "Expert";
+    return roles[0] || "User";
   };
 
   const handleExport = () => {
-    const filteredData = applyFiltersToUsers(users);
-    const exportData = prepareUserDataForExport(filteredData, formatDateTimeForExport);
-    exportToExcel(exportData, 'users_export');
+    const exportData = prepareUserDataForExport(users, formatDateTimeForExport);
+    exportToExcel(exportData, "users_export");
   };
 
-  const applyFiltersToUsers = (usersList) => {
-    return usersList.filter(user => {
-      // Search filter
-      const matchesSearch = 
-        user.name?.toLowerCase().includes(search.toLowerCase()) ||
-        user.email?.toLowerCase().includes(search.toLowerCase()) ||
-        getRole(user.UserRole).toLowerCase().includes(search.toLowerCase());
-
-      // Status filter
-      const matchesStatus = 
-        !filters.status || 
-        (filters.status === 'active' && user.is_active) || 
-        (filters.status === 'inactive' && !user.is_active);
-
-      // Role filter
-      const matchesRole = 
-        !filters.role || 
-        getRole(user.UserRole).toLowerCase().includes(filters.role.toLowerCase());
-
-      // Date range filter
-      const userDate = dayjs(user.created_at);
-      const matchesDateFrom = !filters.dateFrom || userDate.isSameOrAfter(dayjs(filters.dateFrom), 'day');
-      const matchesDateTo = !filters.dateTo || userDate.isSameOrBefore(dayjs(filters.dateTo), 'day');
-
-      return matchesSearch && matchesStatus && matchesRole && matchesDateFrom && matchesDateTo;
-    });
-  };
-
-  const sortedUsers = [...applyFiltersToUsers(users)].sort((a, b) => {
-    if (!sortField) return 0;
-    
-    let aValue, bValue;
-    
-    if (sortField === 'role') {
-      aValue = getRole(a.UserRole);
-      bValue = getRole(b.UserRole);
-    } else if (sortField === 'created') {
-      aValue = dayjs(a.created_at);
-      bValue = dayjs(b.created_at);
-    } else if (sortField === 'status') {
-      aValue = a.is_active;
-      bValue = b.is_active;
-    } else {
-      aValue = a[sortField];
-      bValue = b[sortField];
-    }
-
-    if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-    return 0;
-  });
-
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-  const paginatedUsers = sortedUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-
   return (
     <div className="users-page">
       <div className="header">
-        <div className='title-container'>
+        <div className="title-container">
           <h1>Users</h1>
         </div>
         <div className="actions">
           <div className="left">
             <TextField
-              className='input-search'
+              className="input-search"
               placeholder="Search users by name, email or role..."
               variant="outlined"
               size="small"
@@ -212,9 +217,9 @@ export default function UsersPage() {
                 ),
               }}
             />
-            <Button 
-              className='btn-filter' 
-              variant="outlined" 
+            <Button
+              className="btn-filter"
+              variant="outlined"
               startIcon={<FilterList />}
               onClick={handleFilterClick}
             >
@@ -228,33 +233,50 @@ export default function UsersPage() {
               open={Boolean(filterAnchorEl)}
               onClose={handleFilterClose}
               anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
+                vertical: "bottom",
+                horizontal: "right",
               }}
               transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
+                vertical: "top",
+                horizontal: "right",
               }}
             >
               <Box sx={{ p: 2, width: 300 }}>
                 <Typography variant="subtitle1">Filter Users</Typography>
                 <Divider sx={{ my: 1 }} />
-                
-                <Typography variant="subtitle2" sx={{ mt: 1 }}>Status</Typography>
-                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+
+                <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                  Status
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
                   <Button
-                    variant={filters.status === 'active' ? 'contained' : 'outlined'}
+                    variant={
+                      filters.status === "active" ? "contained" : "outlined"
+                    }
                     size="small"
-                    startIcon={filters.status === 'active' ? <Check /> : null}
-                    onClick={() => setFilters({...filters, status: filters.status === 'active' ? null : 'active'})}
+                    startIcon={filters.status === "active" ? <Check /> : null}
+                    onClick={() =>
+                      setFilters({
+                        ...filters,
+                        status: filters.status === "active" ? null : "active",
+                      })
+                    }
                   >
                     Active
                   </Button>
                   <Button
-                    variant={filters.status === 'inactive' ? 'contained' : 'outlined'}
+                    variant={
+                      filters.status === "inactive" ? "contained" : "outlined"
+                    }
                     size="small"
-                    startIcon={filters.status === 'inactive' ? <Check /> : null}
-                    onClick={() => setFilters({...filters, status: filters.status === 'inactive' ? null : 'inactive'})}
+                    startIcon={filters.status === "inactive" ? <Check /> : null}
+                    onClick={() =>
+                      setFilters({
+                        ...filters,
+                        status:
+                          filters.status === "inactive" ? null : "inactive",
+                      })
+                    }
                   >
                     Inactive
                   </Button>
@@ -265,43 +287,71 @@ export default function UsersPage() {
                   select
                   fullWidth
                   size="small"
-                  value={filters.role || ''}
-                  onChange={(e) => setFilters({...filters, role: e.target.value || null})}
+                  value={filters.role || ""}
+                  onChange={(e) =>
+                    setFilters({ ...filters, role: e.target.value || null })
+                  }
                   sx={{ mb: 2 }}
                 >
                   <MenuItem value="">All Roles</MenuItem>
                   <MenuItem value="admin">Admin</MenuItem>
-                  <MenuItem value="runner">Coach Expert</MenuItem>
+                  <MenuItem value="runner">Runner</MenuItem>
+                  <MenuItem value="expert">Expert</MenuItem>
                   <MenuItem value="user">User</MenuItem>
                 </TextField>
 
                 <Typography variant="subtitle2">Date Range</Typography>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <Box sx={{ display: 'flex', gap: 1, mb: 2, flexDirection: 'column' }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 1,
+                      mb: 2,
+                      flexDirection: "column",
+                    }}
+                  >
                     <DatePicker
                       label="From"
                       value={filters.dateFrom ? dayjs(filters.dateFrom) : null}
-                      onChange={(newValue) => setFilters({...filters, dateFrom: newValue ? newValue.toISOString() : null})}
-                      slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                      onChange={(newValue) =>
+                        setFilters({
+                          ...filters,
+                          dateFrom: newValue ? newValue.toISOString() : null,
+                        })
+                      }
+                      slotProps={{
+                        textField: { size: "small", fullWidth: true },
+                      }}
                     />
                     <DatePicker
                       label="To"
                       value={filters.dateTo ? dayjs(filters.dateTo) : null}
-                      onChange={(newValue) => setFilters({...filters, dateTo: newValue ? newValue.toISOString() : null})}
-                      slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                      onChange={(newValue) =>
+                        setFilters({
+                          ...filters,
+                          dateTo: newValue ? newValue.toISOString() : null,
+                        })
+                      }
+                      slotProps={{
+                        textField: { size: "small", fullWidth: true },
+                      }}
                     />
                   </Box>
                 </LocalizationProvider>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Button onClick={clearFilters} startIcon={<Close />}>Clear</Button>
-                  <Button onClick={applyFilters} variant="contained">Apply</Button>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Button onClick={clearFilters} startIcon={<Close />}>
+                    Clear
+                  </Button>
+                  <Button onClick={applyFilters} variant="contained">
+                    Apply
+                  </Button>
                 </Box>
               </Box>
             </Menu>
-            <Button 
-              className="btn-export" 
-              variant="outlined" 
+            <Button
+              className="btn-export"
+              variant="outlined"
               startIcon={<Download />}
               onClick={handleExport}
               disabled={loading}
@@ -314,7 +364,7 @@ export default function UsersPage() {
       </div>
 
       <Table className="user-table">
-        <TableHead>
+        <TableHead className="user-table-head">
           <TableRow>
             <TableCell>
               <TableSortLabel
@@ -328,29 +378,38 @@ export default function UsersPage() {
             <TableCell>Email</TableCell>
             <TableCell>
               <TableSortLabel
-                active={sortField === "role"}
-                direction={sortField === "role" ? sortOrder : "asc"}
-                onClick={() => handleSort("role")}
+                active={sortField === "roles"}
+                direction={sortField === "roles" ? sortOrder : "asc"}
+                onClick={() => handleSort("roles")}
               >
                 Role
               </TableSortLabel>
             </TableCell>
             <TableCell>
               <TableSortLabel
-                active={sortField === "status"}
-                direction={sortField === "status" ? sortOrder : "asc"}
-                onClick={() => handleSort("status")}
+                active={sortField === "is_active"}
+                direction={sortField === "is_active" ? sortOrder : "asc"}
+                onClick={() => handleSort("is_active")}
               >
                 Status
               </TableSortLabel>
             </TableCell>
             <TableCell>
               <TableSortLabel
-                active={sortField === "created"}
-                direction={sortField === "created" ? sortOrder : "asc"}
-                onClick={() => handleSort("created")}
+                active={sortField === "created_at"}
+                direction={sortField === "created_at" ? sortOrder : "asc"}
+                onClick={() => handleSort("created_at")}
               >
                 Created Date
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={sortField === "points"}
+                direction={sortField === "points" ? sortOrder : "asc"}
+                onClick={() => handleSort("points")}
+              >
+                Points & Level
               </TableSortLabel>
             </TableCell>
             <TableCell>Actions</TableCell>
@@ -358,64 +417,132 @@ export default function UsersPage() {
         </TableHead>
         <TableBody>
           {loading ? (
-            Array(rowsPerPage).fill(0).map((_, index) => (
-              <TableRow key={index}>
+            Array(rowsPerPage)
+              .fill(0)
+              .map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <div className="user-info">
+                      <Skeleton circle width={40} height={40} />
+                      <Skeleton width={100} style={{ marginLeft: "10px" }} />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton width={150} />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton width={80} />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton width={60} />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton width={120} />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton width={100} />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton
+                      width={40}
+                      height={40}
+                      style={{ marginRight: "10px", display: "inline-block" }}
+                    />
+                    <Skeleton
+                      width={40}
+                      height={40}
+                      style={{ display: "inline-block" }}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))
+          ) : users.length > 0 ? (
+            users.map((user) => (
+              <TableRow key={user.id}>
                 <TableCell>
-                  <div className="user-info">
-                    <Skeleton circle width={40} height={40} />
-                    <Skeleton width={100} style={{ marginLeft: '10px' }} />
-                  </div>
+                  <Link className="user-info" to={`/users/${user.id}`}>
+                    <CommonAvatar
+                      uri={user.image?.url}
+                      mode={
+                        user.roles?.includes("expert") ? "expert" : "runner"
+                      }
+                      size={32}
+                    />
+                    <Box sx={{ display: "flex", flexDirection: "column" }}>
+                      <span>{user.name}</span>
+                      <span className="username">@{user.username}</span>
+                    </Box>
+                  </Link>
                 </TableCell>
-                <TableCell><Skeleton width={150} /></TableCell>
-                <TableCell><Skeleton width={80} /></TableCell>
-                <TableCell><Skeleton width={60} /></TableCell>
-                <TableCell><Skeleton width={120} /></TableCell>
+                <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  <Skeleton width={40} height={40} style={{ marginRight: '10px', display: 'inline-block' }} />
-                  <Skeleton width={40} height={40} style={{ display: 'inline-block' }} />
+                  <span
+                    className={`role ${getRole(user.roles)
+                      .toLowerCase()
+                      .replace(" ", "-")}`}
+                  >
+                    {user.roles.includes("expert") ? "Expert" : "Runner"}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`status ${
+                      user.is_active ? "active" : "inactive"
+                    }`}
+                  >
+                    {user.is_active ? "Active" : "Inactive"}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <CalendarToday fontSize="small" color="action" />
+                    {formatDate(user.created_at)}
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <EmojiEvents fontSize="small" color="warning" />
+                      <Typography variant="body2">
+                        {user.points}
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <MilitaryTech fontSize="small" color="warning" />
+                      <Typography variant="body2">
+                        {capitalizeFirstLetter(user.user_level)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Button className="btn-edit">
+                    <EditIcon />
+                  </Button>
+                  <Button className="btn-delete">
+                    <DoDisturbIcon />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))
           ) : (
-            paginatedUsers.length > 0 ? (
-              paginatedUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <Link className="user-info" to={`/users/${user.id}`}>
-                      <Avatar className="avatar">{user.username?.charAt(0)}</Avatar>
-                      <span>{user.username}</span>
-                    </Link>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <span className={`role ${getRole(user.UserRole).toLowerCase().replace(" ", "-")}`}>
-                      {getRole(user.UserRole)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`status ${user.is_active ? 'active' : 'inactive'}`}>
-                      {user.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CalendarToday fontSize="small" color="action" />
-                      {formatDate(user.created_at)}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Button className="btn-edit"><EditIcon /></Button>
-                    <Button className="btn-delete"><DeleteIcon /></Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No users found matching your criteria
-                </TableCell>
-              </TableRow>
-            )
+            <TableRow>
+              <TableCell colSpan={7} align="center">
+                No users found matching your criteria
+              </TableCell>
+            </TableRow>
           )}
         </TableBody>
       </Table>
@@ -423,7 +550,7 @@ export default function UsersPage() {
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
-        count={sortedUsers.length}
+        count={totalUsers}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

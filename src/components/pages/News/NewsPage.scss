@@ -4,9 +4,20 @@
   padding: 20px 2rem;
 
   .field-search {
-    background-color: #FFF;
+    background-color: #fff;
   }
-  
+
+  .news-table {
+    .MuiTableCell-head {
+      background-color: $primary-dark-color !important;
+      color: #fff;
+
+      * {
+        color: #fff !important;
+      }
+    }
+  }
+
   .news-filters {
     display: flex;
     gap: 10px;
@@ -17,7 +28,7 @@
 
   .news-title {
     font-weight: 600;
-    font-family: "Inter", sans-serif !important; 
+    font-family: "Inter", sans-serif !important;
   }
 
   .status-filter {
