@@ -2,7 +2,7 @@ import axios from "axios";
 import { getCookie } from "./util_cookie";
 
 // const MASTER_URL = "https://xavia.pro/api"
-const MASTER_URL = "http://192.168.1.11:5000/api";
+const MASTER_URL = "http://192.168.1.16:5000/api";
 
 const axiosInstance = axios.create({
   baseURL: MASTER_URL,

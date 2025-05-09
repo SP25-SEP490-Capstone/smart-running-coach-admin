@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./PostsDetailPage.scss";
 import {
   Avatar,
@@ -15,126 +15,160 @@ import {
   Card,
   CardContent,
   Grid,
+  CircularProgress,
+  Badge,
 } from "@mui/material";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ThumbUpIcon from "@mui/icons-material/ThumbUp";
-import ThumbDownIcon from "@mui/icons-material/ThumbDown";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
-import TimerIcon from "@mui/icons-material/Timer";
-import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
-import TerrainIcon from "@mui/icons-material/Terrain";
-import SpeedIcon from "@mui/icons-material/Speed";
-import FavoriteIcon from "@mui/icons-material/Favorite";
+import {
+  MoreVert,
+  ThumbUp,
+  ChatBubbleOutline,
+  Edit,
+  Delete,
+  DirectionsRun,
+  Timer,
+  LocalFireDepartment,
+  Terrain,
+  Speed,
+  Favorite,
+  Reply,
+  ExpandMore,
+  ExpandLess,
+} from "@mui/icons-material";
 import CommonBreadcrumb from "@components/commons/CommonBreadcrumb";
 import { Link, useParams } from "react-router-dom";
 import CommonDialog from "@components/commons/CommonDialog";
 import { aget } from "@components/utils/util_axios";
-import { GoogleMap, Polyline, Marker } from "@react-google-maps/api";
+import mapboxgl from "mapbox-gl";
+import { CommonAvatar } from "@components/commons/CommonAvatar";
+import { getNameFromExerciseType } from "@components/utils/util_exerciseType";
+
+// Mapbox CSS (required)
+import "mapbox-gl/dist/mapbox-gl.css";
 
 interface PostData {
   id: string;
   title: string;
   content: string;
-  created_at: string;
-  comment_count: number;
-  upvote_count: number;
-  is_upvoted: boolean;
-  images: string[];
-  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+  isDeleted: boolean;
+  status: string;
+  images: {
+    id: string;
+    url: string;
+  }[];
   user: {
     id: string;
     username: string;
-    is_active: boolean;
-  };
-  exercise_session_record_id: string | null;
-}
-
-interface ExerciseSession {
-  id: string;
-  duration_minutes: number;
-  total_distance: number;
-  total_calories: number;
-  total_steps: number;
-  avg_pace: string;
-  heart_rate: {
-    min: number;
-    avg: number;
-    max: number;
-  };
-  routes: {
-    time: string;
-    latitude: number;
-    longitude: number;
-  }[];
-  User: {
-    id: string;
     name: string;
     email: string;
+    image?: {
+      url: string;
+    };
   };
+  stats: {
+    upvotes: number;
+    commentCount: number;
+  };
+  exerciseSession: {
+    id: string;
+    startTime: string;
+    endTime: string;
+    exerciseType: number;
+    routes: {
+      time: string;
+      latitude: number;
+      longitude: number;
+    }[];
+  } | null;
+  votes: {
+    id: string;
+    user: {
+      id: string;
+      username: string;
+    };
+    createdAt: string;
+  }[];
+  comments: {
+    id: string;
+    content: string;
+    user: {
+      id: string;
+      username: string;
+      name: string;
+      email: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+    upvotes: number;
+    votes: {
+      id: string;
+      user: {
+        id: string;
+        username: string;
+      };
+      createdAt: string;
+    }[];
+    subComments: {
+      id: string;
+      content: string;
+      user: {
+        id: string;
+        username: string;
+        name: string;
+        email: string;
+      };
+      createdAt: string;
+      updatedAt: string;
+      upvotes: number;
+      votes: {
+        id: string;
+        user: {
+          id: string;
+          username: string;
+        };
+        createdAt: string;
+      }[];
+    }[];
+  }[];
 }
 
-interface Comment {
-  id: string;
-  name: string;
-  time: string;
-  text: string;
-  up: number;
-  down: number;
-  replies: Comment[];
-}
+const mapContainerStyle = {
+  width: "100%",
+  height: "400px",
+  borderRadius: "8px",
+  marginTop: "16px",
+};
 
 export default function PostsDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [post, setPost] = useState<PostData | null>(null);
-  const [exerciseSession, setExerciseSession] =
-    useState<ExerciseSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [removePostDialogOpen, setRemovePostDialogOpen] = useState(false);
   const [editPostDialogOpen, setEditPostDialogOpen] = useState(false);
-  const [editCommentDialogOpen, setEditCommentDialogOpen] = useState(false);
-  const [removeCommentDialogOpen, setRemoveCommentDialogOpen] = useState(false);
   const [expandedReplies, setExpandedReplies] = useState<
     Record<string, boolean>
   >({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"details" | "comments">("details");
+
+  // Mapbox references
+  const mapContainer = useRef<HTMLDivElement | null>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   const fetchPost = async () => {
     try {
       setLoading(true);
-      const response = await aget(`/posts/${id}`);
+      const response = await aget(`/posts/admin/post/${id}`);
       setPost(response.data.data);
-
-      // If post has an exercise session, fetch that data
-      if (response.data.data.exercise_session_record_id) {
-        await fetchExerciseSession(
-          response.data.data.exercise_session_record_id
-        );
-      }
-
-      // TODO: Fetch comments for this post
-      // const commentsResponse = await aget(`/posts/${id}/comments`);
-      // setComments(commentsResponse.data.data);
     } catch (err) {
       setError("Failed to load post data");
       console.error(err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchExerciseSession = async (sessionId: string) => {
-    try {
-      const response = await aget(`/record-exercise-session/${sessionId}`);
-      setExerciseSession(response.data.data);
-    } catch (err) {
-      console.error("Failed to load exercise session data", err);
     }
   };
 
@@ -144,20 +178,94 @@ export default function PostsDetailPage() {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (!post?.exerciseSession?.routes || !mapContainer.current || mapLoaded)
+      return;
+
+    // Initialize map only once
+    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
+
+    const pathCoordinates = post.exerciseSession.routes.map((route) => ({
+      lng: route.longitude,
+      lat: route.latitude,
+    }));
+
+    const bounds = new mapboxgl.LngLatBounds();
+    pathCoordinates.forEach((coord) => bounds.extend(coord));
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/streets-v12",
+      bounds: bounds,
+      fitBoundsOptions: {
+        padding: 50,
+      },
+    });
+
+    map.current.on("load", () => {
+      setMapLoaded(true);
+
+      map.current?.addSource("route", {
+        type: "geojson",
+        data: {
+          type: "Feature",
+          properties: {},
+          geometry: {
+            type: "LineString",
+            coordinates: pathCoordinates.map((coord) => [coord.lng, coord.lat]),
+          },
+        },
+      });
+
+      map.current?.addLayer({
+        id: "route",
+        type: "line",
+        source: "route",
+        layout: {
+          "line-join": "round",
+          "line-cap": "round",
+        },
+        paint: {
+          "line-color": "#003363",
+          "line-width": 4,
+        },
+      });
+
+      // Add start and end markers
+      if (pathCoordinates.length > 0) {
+        // Start marker
+        new mapboxgl.Marker({ color: "#4CAF50" })
+          .setLngLat(pathCoordinates[0])
+          .setPopup(new mapboxgl.Popup().setHTML("<h3>Start</h3>"))
+          .addTo(map.current);
+
+        // End marker
+        new mapboxgl.Marker({ color: "#F44336" })
+          .setLngLat(pathCoordinates[pathCoordinates.length - 1])
+          .setPopup(new mapboxgl.Popup().setHTML("<h3>End</h3>"))
+          .addTo(map.current);
+      }
+      setMapLoaded(false);
+    });
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, [post?.exerciseSession?.routes, mapLoaded]);
+
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) =>
     setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
   const handleRemovePostClick = () => setRemovePostDialogOpen(true);
   const handleEditPostClick = () => setEditPostDialogOpen(true);
-  const handleEditCommentClick = () => setEditCommentDialogOpen(true);
-  const handleRemoveCommentClick = () => setRemoveCommentDialogOpen(true);
 
   const handleDialogClose = () => {
     setRemovePostDialogOpen(false);
     setEditPostDialogOpen(false);
-    setEditCommentDialogOpen(false);
-    setRemoveCommentDialogOpen(false);
   };
 
   const handleToggleReplies = (commentId: string) => {
@@ -171,386 +279,330 @@ export default function PostsDetailPage() {
     setSearchQuery(event.target.value);
   };
 
-  const handleUpvote = async () => {
-    if (!post) return;
-    try {
-      // TODO: Implement upvote API call
-      // await apost(`/posts/${post.id}/upvote`);
-      setPost({
-        ...post,
-        upvote_count: post.is_upvoted
-          ? post.upvote_count - 1
-          : post.upvote_count + 1,
-        is_upvoted: !post.is_upvoted,
-      });
-    } catch (err) {
-      console.error("Failed to upvote", err);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
-  const filteredComments = comments.filter(
-    (comment) =>
-      comment.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      comment.text.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const calculateDuration = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diff = endDate.getTime() - startDate.getTime();
+    return Math.round(diff / (1000 * 60)); // minutes
+  };
+
+  const filteredComments =
+    post?.comments.filter(
+      (comment) =>
+        comment.user.username
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        comment.content.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
 
   if (loading) {
-    return <Box className="posts-detail-page">Loading...</Box>;
+    return (
+      <Box className="posts-detail-page loading">
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (error) {
-    return <Box className="posts-detail-page">{error}</Box>;
+    return <Box className="posts-detail-page error">{error}</Box>;
   }
 
   if (!post) {
     return <Box className="posts-detail-page">Post not found</Box>;
   }
 
-  // Prepare map data if exercise session exists with routes
-  const mapCenter =
-    exerciseSession?.routes?.length > 0
-      ? {
-          lat: exerciseSession.routes[0].latitude,
-          lng: exerciseSession.routes[0].longitude,
-        }
-      : { lat: 0, lng: 0 };
-
-  const pathCoordinates =
-    exerciseSession?.routes?.map((route) => ({
-      lat: route.latitude,
-      lng: route.longitude,
-    })) || [];
-
   return (
     <Box className="posts-detail-page">
       <CommonBreadcrumb
         items={[
           { name: "Dashboard", link: "/dashboard" },
-          { name: "Posts", link: "/posts" },
+          { name: "Posts", link: "/admin/posts" },
           { name: post.title },
         ]}
       />
 
-      <Box className="post-card">
-        <Typography variant="h4" className="post-title">
-          {post.title}
-        </Typography>
-
-        <Box className="post-meta">
-          <Avatar className="avatar">
-            {post.user.username.charAt(0).toUpperCase()}
-          </Avatar>
-          <Link to={`/users/${post.user.id}`}>
-            <Typography className="author">{post.user.username}</Typography>
-          </Link>
-          <Typography className="time">
-            {formatDate(post.created_at)}
+      <Box className="post-container">
+        <Box className="post-header">
+          <p className="post-id">ID: {post.id}</p>
+          <Typography variant="h4" className="post-title">
+            {post.title}
+            {post.isDeleted && (
+              <Chip label="Deleted" size="small" color="error" sx={{ ml: 2 }} />
+            )}
           </Typography>
-          <Box className="tags-container">
-            {post.tags.map((tag, index) => (
-              <Chip key={index} label={tag} size="small" className="tag" />
-            ))}
+
+          <Box className="post-meta">
+            <CommonAvatar uri={post.user.image?.url} />
+            <Box>
+              <Link to={`/admin/users/${post.user.id}`}>
+                <Typography className="author">{post.user.username}</Typography>
+              </Link>
+              <Typography className="time" variant="caption">
+                {formatDate(post.createdAt)}
+                {post.updatedAt &&
+                  post.createdAt !== post.updatedAt &&
+                  ` (updated ${formatDate(post.updatedAt)})`}
+              </Typography>
+            </Box>
           </Box>
         </Box>
 
-        <Box className="post-stats">
-          <Box className="stat-box" onClick={handleUpvote}>
-            <ThumbUpIcon
-              fontSize="small"
-              color={post.is_upvoted ? "primary" : "inherit"}
-            />
-            <Typography variant="caption">
-              {post.upvote_count} Upvotes
-            </Typography>
-          </Box>
-          <Box className="stat-box">
-            <ChatBubbleOutlineIcon fontSize="small" />
-            <Typography variant="caption">
-              {post.comment_count} Comments
-            </Typography>
-          </Box>
-        </Box>
-
-        <Typography className="post-content">{post.content}</Typography>
-
-        {post.images?.length > 0 && (
-          <Box className="post-images">
-            {post.images.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`Post image ${index + 1}`}
-                className="post-image"
-              />
-            ))}
-          </Box>
-        )}
-
-        {exerciseSession && (
-          <Box className="exercise-session-card">
-            <Typography variant="h6" className="session-title">
-              <DirectionsRunIcon /> Exercise Session Details
-            </Typography>
-
-            <Grid container spacing={2} className="session-stats">
-              <Grid item xs={6} sm={3}>
-                <Card variant="outlined" className="stat-card">
-                  <CardContent>
-                    <TimerIcon color="primary" />
-                    <Typography variant="h6">
-                      {exerciseSession.duration_minutes} min
-                    </Typography>
-                    <Typography variant="caption">Duration</Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Card variant="outlined" className="stat-card">
-                  <CardContent>
-                    <TerrainIcon color="primary" />
-                    <Typography variant="h6">
-                      {(exerciseSession.total_distance / 1000).toFixed(2)} km
-                    </Typography>
-                    <Typography variant="caption">Distance</Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Card variant="outlined" className="stat-card">
-                  <CardContent>
-                    <LocalFireDepartmentIcon color="primary" />
-                    <Typography variant="h6">
-                      {exerciseSession.total_calories}
-                    </Typography>
-                    <Typography variant="caption">Calories</Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Card variant="outlined" className="stat-card">
-                  <CardContent>
-                    <SpeedIcon color="primary" />
-                    <Typography variant="h6">
-                      {exerciseSession.avg_pace} min/km
-                    </Typography>
-                    <Typography variant="caption">Avg Pace</Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-
-            {exerciseSession.heart_rate && (
-              <Box className="heart-rate-section">
-                <Typography variant="subtitle1">
-                  <FavoriteIcon color="error" /> Heart Rate
-                </Typography>
-                <Box className="heart-rate-stats">
-                  <Typography>
-                    Min: {exerciseSession.heart_rate.min} bpm
-                  </Typography>
-                  <Typography>
-                    Avg: {exerciseSession.heart_rate.avg} bpm
-                  </Typography>
-                  <Typography>
-                    Max: {exerciseSession.heart_rate.max} bpm
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-
-            {pathCoordinates.length > 0 && (
-              <Box className="map-container">
-                <Typography variant="subtitle1">Route Map</Typography>
-                <GoogleMap
-                  mapContainerStyle={{ width: "100%", height: "300px" }}
-                  center={mapCenter}
-                  zoom={14}
-                >
-                  <Polyline
-                    path={pathCoordinates}
-                    options={{
-                      strokeColor: "#4285F4",
-                      strokeOpacity: 1.0,
-                      strokeWeight: 4,
-                    }}
-                  />
-                  {pathCoordinates.length > 0 && (
-                    <>
-                      <Marker position={pathCoordinates[0]} label="S" />
-                      <Marker
-                        position={pathCoordinates[pathCoordinates.length - 1]}
-                        label="E"
-                      />
-                    </>
-                  )}
-                </GoogleMap>
-              </Box>
-            )}
-          </Box>
-        )}
-
-        <Box className="post-actions">
+        <Box className="post-tabs">
           <Button
-            variant="contained"
-            color="primary"
-            startIcon={<EditIcon />}
-            onClick={handleEditPostClick}
+            className={`btn-tab btn-tab-left ${
+              activeTab === "details" ? "btn-tag-active" : ""
+            }`}
+            onClick={() => setActiveTab("details")}
           >
-            Edit Post
+            Post Details
           </Button>
           <Button
-            variant="contained"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={handleRemovePostClick}
+            className={`btn-tab btn-tab-right ${
+              activeTab === "comments" ? "btn-tag-active" : ""
+            }`}
+            onClick={() => setActiveTab("comments")}
+            sx={{ ml: 2 }}
           >
-            Remove Post
+            Comments ({post.stats.commentCount})
           </Button>
         </Box>
 
-        <Box className="post-mod-container">
-          <Select
-            defaultValue=""
-            displayEmpty
-            className="removal-reason"
-            size="small"
-          >
-            <MenuItem value="">Select a reason...</MenuItem>
-            <MenuItem value="inappropriate">Inappropriate Content</MenuItem>
-            <MenuItem value="spam">Spam</MenuItem>
-            <MenuItem value="other">Other</MenuItem>
-          </Select>
-          <TextField
-            className="moderator-note"
-            label="Moderator Note"
-            variant="outlined"
-            fullWidth
-            size="small"
-            placeholder="Add a note for moderators..."
-          />
-        </Box>
-      </Box>
+        {activeTab === "details" ? (
+          <>
+            <Box className="post-content-section">
+              <Typography className="post-content">{post.content}</Typography>
 
-      <Box className="comments-section">
-        <Typography variant="h6">Comments ({post.comment_count})</Typography>
-
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Search comments..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          sx={{ marginBottom: 2 }}
-          size="small"
-        />
-
-        {filteredComments.length > 0 ? (
-          filteredComments.map((comment) => (
-            <Box key={comment.id} className="comment">
-              <Avatar className="comment-avatar">
-                {comment.name.charAt(0).toUpperCase()}
-              </Avatar>
-              <Box className="comment-content">
-                <Box className="comment-header">
-                  <Link to={`/users/${comment.id}`}>
-                    <Typography className="comment-author">
-                      {comment.name}
-                    </Typography>
-                  </Link>
-                  <Typography className="comment-time">
-                    {comment.time}
-                  </Typography>
-                </Box>
-                <Typography variant="body2">{comment.text}</Typography>
-                <Box className="comment-stats">
-                  <IconButton size="small">
-                    <ThumbUpIcon fontSize="small" />{" "}
-                    <Typography variant="caption">{comment.up}</Typography>
-                  </IconButton>
-                  <IconButton size="small">
-                    <ThumbDownIcon fontSize="small" />{" "}
-                    <Typography variant="caption">{comment.down}</Typography>
-                  </IconButton>
-                  {comment.replies.length > 0 && (
-                    <IconButton
-                      size="small"
-                      onClick={() => handleToggleReplies(comment.id)}
-                    >
-                      <ChatBubbleOutlineIcon fontSize="small" />
-                      <Typography variant="caption">
-                        {comment.replies.length} replies
-                      </Typography>
-                    </IconButton>
-                  )}
-                  <IconButton size="small" onClick={handleMenuOpen}>
-                    <MoreVertIcon fontSize="small" />
-                  </IconButton>
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
-                  >
-                    <MenuItem onClick={handleEditCommentClick}>
-                      Edit Comment
-                    </MenuItem>
-                    <MenuItem onClick={handleRemoveCommentClick}>
-                      Remove Comment
-                    </MenuItem>
-                    <MenuItem onClick={handleMenuClose}>Report</MenuItem>
-                  </Menu>
-                </Box>
-
-                {expandedReplies[comment.id] &&
-                  comment.replies.map((reply) => (
-                    <Box key={reply.id} className="comment reply">
-                      <Avatar className="comment-avatar">
-                        {reply.name.charAt(0).toUpperCase()}
-                      </Avatar>
-                      <Box className="comment-content">
-                        <Box className="comment-header">
-                          <Link to={`/users/${reply.id}`}>
-                            <Typography className="comment-author">
-                              {reply.name}
-                            </Typography>
-                          </Link>
-                          <Typography className="comment-time">
-                            {reply.time}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2">{reply.text}</Typography>
-                        <Box className="comment-stats">
-                          <IconButton size="small">
-                            <ThumbUpIcon fontSize="small" />{" "}
-                            <Typography variant="caption">
-                              {reply.up}
-                            </Typography>
-                          </IconButton>
-                          <IconButton size="small">
-                            <ThumbDownIcon fontSize="small" />{" "}
-                            <Typography variant="caption">
-                              {reply.down}
-                            </Typography>
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    </Box>
+              {post.images?.length > 0 && (
+                <Box className="post-images">
+                  {post.images.map((image) => (
+                    <img
+                      key={image.id}
+                      src={image.url}
+                      alt="Post content"
+                      className="post-image"
+                    />
                   ))}
+                </Box>
+              )}
+            </Box>
+
+            <Box className="post-stats">
+              <Box className="stat-box">
+                <Favorite className="stat-icon" fontSize="small" />
+                <Typography variant="body2">
+                  {post.stats.upvotes} Upvotes
+                </Typography>
+              </Box>
+              <Box className="stat-box">
+                <ChatBubbleOutline fontSize="small" />
+                <Typography variant="body2">
+                  {post.stats.commentCount} Comments
+                </Typography>
               </Box>
             </Box>
-          ))
+
+            {post.exerciseSession && (
+              <Box className="exercise-session-card">
+                <Typography variant="h6" className="section-title">
+                  <DirectionsRun sx={{ mr: 1 }} /> Exercise Session
+                </Typography>
+
+                <Grid container spacing={2} className="session-stats">
+                  <Grid item xs={6} sm={3}>
+                    <Card variant="outlined" className="stat-card">
+                      <CardContent>
+                        <Timer color="primary" />
+                        <Typography variant="h6">
+                          {calculateDuration(
+                            post.exerciseSession.startTime,
+                            post.exerciseSession.endTime
+                          )}{" "}
+                          min
+                        </Typography>
+                        <Typography variant="caption">Duration</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Card variant="outlined" className="stat-card">
+                      <CardContent>
+                        <LocalFireDepartment color="primary" />
+                        <Typography variant="h6">
+                          {getNameFromExerciseType(
+                            post.exerciseSession.exerciseType
+                          )}
+                        </Typography>
+                        <Typography variant="caption">Exercise Type</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Card variant="outlined" className="stat-card">
+                      <CardContent>
+                        <Favorite color="error" />
+                        <Typography variant="h6">
+                          {post.exerciseSession.routes.length}
+                        </Typography>
+                        <Typography variant="caption">Route Points</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+
+                {post.exerciseSession.routes.length > 0 && (
+                  <Box className="map-section">
+                    <Typography variant="subtitle1" className="section-title">
+                      Exercise Route
+                    </Typography>
+                    <div
+                      ref={mapContainer}
+                      style={mapContainerStyle}
+                      className="map-container"
+                    />
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            <Box className="post-actions">
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<Edit />}
+                onClick={handleEditPostClick}
+              >
+                Edit Post
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<Delete />}
+                onClick={handleRemovePostClick}
+                sx={{ ml: 2 }}
+              >
+                {post.isDeleted ? "Permanently Delete" : "Delete Post"}
+              </Button>
+            </Box>
+          </>
         ) : (
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            className="no-comments"
-          >
-            No comments yet.
-          </Typography>
+          <Box className="comments-section">
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search comments..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              sx={{ mb: 3 }}
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <Box sx={{ color: "action.active", mr: 1 }}>
+                    <ChatBubbleOutline />
+                  </Box>
+                ),
+              }}
+            />
+
+            {filteredComments.length > 0 ? (
+              filteredComments.map((comment) => (
+                <Box key={comment.id} className="comment">
+                  <Avatar className="comment-avatar">
+                    {comment.user.username.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box className="comment-content">
+                    <Box className="comment-header">
+                      <Link to={`/admin/users/${comment.user.id}`}>
+                        <Typography className="comment-author">
+                          {comment.user.username}
+                        </Typography>
+                      </Link>
+                      <Typography className="comment-time">
+                        {formatDate(comment.createdAt)}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2">{comment.content}</Typography>
+                    <Box className="comment-actions">
+                      <Box className="vote-actions">
+                        <IconButton size="small">
+                          <ThumbUp fontSize="small" />
+                          <Typography variant="caption" sx={{ ml: 0.5 }}>
+                            {comment.upvotes}
+                          </Typography>
+                        </IconButton>
+                      </Box>
+                      {comment.subComments.length > 0 && (
+                        <Button
+                          size="small"
+                          startIcon={
+                            expandedReplies[comment.id] ? (
+                              <ExpandLess />
+                            ) : (
+                              <ExpandMore />
+                            )
+                          }
+                          onClick={() => handleToggleReplies(comment.id)}
+                        >
+                          {comment.subComments.length} replies
+                        </Button>
+                      )}
+                      <IconButton size="small" onClick={handleMenuOpen}>
+                        <MoreVert fontSize="small" />
+                      </IconButton>
+                    </Box>
+
+                    {expandedReplies[comment.id] &&
+                      comment.subComments.map((reply) => (
+                        <Box key={reply.id} className="comment reply">
+                          <Avatar className="comment-avatar">
+                            {reply.user.username.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Box className="comment-content">
+                            <Box className="comment-header">
+                              <Link to={`/admin/users/${reply.user.id}`}>
+                                <Typography className="comment-author">
+                                  {reply.user.username}
+                                </Typography>
+                              </Link>
+                              <Typography className="comment-time">
+                                {formatDate(reply.createdAt)}
+                              </Typography>
+                            </Box>
+                            <Typography variant="body2">
+                              {reply.content}
+                            </Typography>
+                            <Box className="comment-actions">
+                              <IconButton size="small">
+                                <ThumbUp fontSize="small" />
+                                <Typography variant="caption" sx={{ ml: 0.5 }}>
+                                  {reply.upvotes}
+                                </Typography>
+                              </IconButton>
+                            </Box>
+                          </Box>
+                        </Box>
+                      ))}
+                  </Box>
+                </Box>
+              ))
+            ) : (
+              <Box className="no-comments">
+                <Typography variant="body2" color="textSecondary">
+                  No comments found
+                </Typography>
+              </Box>
+            )}
+          </Box>
         )}
       </Box>
 
@@ -559,16 +611,19 @@ export default function PostsDetailPage() {
         open={editPostDialogOpen}
         onClose={handleDialogClose}
         title="Edit Post"
+        maxWidth="md"
         footer={
           <>
             <Button onClick={handleDialogClose}>Cancel</Button>
             <Button
+              variant="contained"
               color="primary"
               onClick={() => {
-                /* Handle post edit */ handleDialogClose();
+                /* Handle post edit */
+                handleDialogClose();
               }}
             >
-              Save
+              Save Changes
             </Button>
           </>
         }
@@ -583,7 +638,7 @@ export default function PostsDetailPage() {
         <TextField
           fullWidth
           multiline
-          rows={6}
+          rows={8}
           variant="outlined"
           label="Content"
           defaultValue={post.content}
@@ -595,72 +650,38 @@ export default function PostsDetailPage() {
       <CommonDialog
         open={removePostDialogOpen}
         onClose={handleDialogClose}
-        title="Remove Post"
+        title={post.isDeleted ? "Permanently Delete Post" : "Delete Post"}
         footer={
           <>
             <Button onClick={handleDialogClose}>Cancel</Button>
             <Button
+              variant="contained"
               color="error"
               onClick={() => {
-                /* Handle post removal */ handleDialogClose();
+                /* Handle post removal */
+                handleDialogClose();
               }}
             >
-              Remove
+              {post.isDeleted ? "Permanently Delete" : "Delete"}
             </Button>
           </>
         }
       >
-        <Typography>Are you sure you want to remove this post?</Typography>
-      </CommonDialog>
-
-      {/* Edit Comment Dialog */}
-      <CommonDialog
-        open={editCommentDialogOpen}
-        onClose={handleDialogClose}
-        title="Edit Comment"
-        footer={
-          <>
-            <Button onClick={handleDialogClose}>Cancel</Button>
-            <Button
-              color="primary"
-              onClick={() => {
-                /* Handle comment edit */ handleDialogClose();
-              }}
-            >
-              Save
-            </Button>
-          </>
-        }
-      >
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          variant="outlined"
-          defaultValue="This is a fantastic analysis!"
-        />
-      </CommonDialog>
-
-      {/* Remove Comment Dialog */}
-      <CommonDialog
-        open={removeCommentDialogOpen}
-        onClose={handleDialogClose}
-        title="Remove Comment"
-        footer={
-          <>
-            <Button onClick={handleDialogClose}>Cancel</Button>
-            <Button
-              color="error"
-              onClick={() => {
-                /* Handle comment removal */ handleDialogClose();
-              }}
-            >
-              Remove
-            </Button>
-          </>
-        }
-      >
-        <Typography>Are you sure you want to remove this comment?</Typography>
+        <Typography>
+          {post.isDeleted
+            ? "This will permanently delete the post and all associated data. This action cannot be undone."
+            : "Are you sure you want to delete this post? The post will be archived and can be restored later."}
+        </Typography>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle2">Reason for deletion:</Typography>
+          <Select fullWidth size="small" defaultValue="" sx={{ mt: 1 }}>
+            <MenuItem value="">Select a reason</MenuItem>
+            <MenuItem value="inappropriate">Inappropriate Content</MenuItem>
+            <MenuItem value="spam">Spam</MenuItem>
+            <MenuItem value="violation">Policy Violation</MenuItem>
+            <MenuItem value="other">Other</MenuItem>
+          </Select>
+        </Box>
       </CommonDialog>
     </Box>
   );
