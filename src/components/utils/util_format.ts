@@ -1,8 +1,12 @@
-export const capitalizeFirstLetter = (str: string) => {
+export const capitalizeFirstLetter = (str: string, force = false) => {
   if (!str) {
     return "";
   }
-  return str.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+  const result = str.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toLowerCase());
+  if (force) {
+    return result[0].toUpperCase() + result.slice(1);
+  }
+  return result[0].toUpperCase() + result.slice(1).toLowerCase();
 };
 
 export const formatDate = (dateString: string) => {

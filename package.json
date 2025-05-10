@@ -17,6 +17,7 @@
     "@mui/x-data-grid": "^7.18.0",
     "@mui/x-date-pickers": "^7.18.0",
     "@react-google-maps/api": "^2.20.6",
+    "@turf/turf": "^7.2.0",
     "axios": "^1.7.7",
     "chart.js": "^4.4.4",
     "crypto-js": "^4.2.0",

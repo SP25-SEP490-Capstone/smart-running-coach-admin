@@ -8,31 +8,16 @@ import {
   Select,
   MenuItem,
   IconButton,
-  Menu,
   TextField,
   Chip,
-  Divider,
-  Card,
-  CardContent,
-  Grid,
   CircularProgress,
-  Badge,
 } from "@mui/material";
 import {
   MoreVert,
-  ThumbUp,
   ChatBubbleOutline,
-  Edit,
-  Delete,
-  DirectionsRun,
-  Timer,
-  LocalFireDepartment,
-  Terrain,
-  Speed,
-  Favorite,
-  Reply,
   ExpandMore,
   ExpandLess,
+  Favorite,
 } from "@mui/icons-material";
 import CommonBreadcrumb from "@components/commons/CommonBreadcrumb";
 import { Link, useParams } from "react-router-dom";
@@ -40,98 +25,8 @@ import CommonDialog from "@components/commons/CommonDialog";
 import { aget } from "@components/utils/util_axios";
 import mapboxgl from "mapbox-gl";
 import { CommonAvatar } from "@components/commons/CommonAvatar";
-import { getNameFromExerciseType } from "@components/utils/util_exerciseType";
-
-// Mapbox CSS (required)
 import "mapbox-gl/dist/mapbox-gl.css";
-
-interface PostData {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-  isDeleted: boolean;
-  status: string;
-  images: {
-    id: string;
-    url: string;
-  }[];
-  user: {
-    id: string;
-    username: string;
-    name: string;
-    email: string;
-    image?: {
-      url: string;
-    };
-  };
-  stats: {
-    upvotes: number;
-    commentCount: number;
-  };
-  exerciseSession: {
-    id: string;
-    startTime: string;
-    endTime: string;
-    exerciseType: number;
-    routes: {
-      time: string;
-      latitude: number;
-      longitude: number;
-    }[];
-  } | null;
-  votes: {
-    id: string;
-    user: {
-      id: string;
-      username: string;
-    };
-    createdAt: string;
-  }[];
-  comments: {
-    id: string;
-    content: string;
-    user: {
-      id: string;
-      username: string;
-      name: string;
-      email: string;
-    };
-    createdAt: string;
-    updatedAt: string;
-    upvotes: number;
-    votes: {
-      id: string;
-      user: {
-        id: string;
-        username: string;
-      };
-      createdAt: string;
-    }[];
-    subComments: {
-      id: string;
-      content: string;
-      user: {
-        id: string;
-        username: string;
-        name: string;
-        email: string;
-      };
-      createdAt: string;
-      updatedAt: string;
-      upvotes: number;
-      votes: {
-        id: string;
-        user: {
-          id: string;
-          username: string;
-        };
-        createdAt: string;
-      }[];
-    }[];
-  }[];
-}
+import PDPTabDetail from "./PDPTabDetail";
 
 const mapContainerStyle = {
   width: "100%",
@@ -141,23 +36,21 @@ const mapContainerStyle = {
 };
 
 export default function PostsDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const [post, setPost] = useState<PostData | null>(null);
+  const { id } = useParams<any>();
+  const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [error, setError] = useState<any>(null);
+  const [anchorEl, setAnchorEl] = useState<any>(null);
   const [removePostDialogOpen, setRemovePostDialogOpen] = useState(false);
   const [editPostDialogOpen, setEditPostDialogOpen] = useState(false);
-  const [expandedReplies, setExpandedReplies] = useState<
-    Record<string, boolean>
-  >({});
+  const [expandedReplies, setExpandedReplies] = useState<any>({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"details" | "comments">("details");
+  const [activeTab, setActiveTab] = useState<any>("details");
 
   // Mapbox references
-  const mapContainer = useRef<HTMLDivElement | null>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
+  const mapContainer = useRef<any>(null);
+  const map = useRef<any>(null);
+  const [mapInitialized, setMapInitialized] = useState(false);
 
   const fetchPost = async () => {
     try {
@@ -179,19 +72,23 @@ export default function PostsDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    if (!post?.exerciseSession?.routes || !mapContainer.current || mapLoaded)
+    if (
+      !post?.exerciseSession?.routes ||
+      !mapContainer.current ||
+      mapInitialized
+    )
       return;
 
     // Initialize map only once
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
-    const pathCoordinates = post.exerciseSession.routes.map((route) => ({
+    const pathCoordinates = post.exerciseSession.routes.map((route: any) => ({
       lng: route.longitude,
       lat: route.latitude,
     }));
 
     const bounds = new mapboxgl.LngLatBounds();
-    pathCoordinates.forEach((coord) => bounds.extend(coord));
+    pathCoordinates.forEach((coord: any) => bounds.extend(coord));
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -203,7 +100,7 @@ export default function PostsDetailPage() {
     });
 
     map.current.on("load", () => {
-      setMapLoaded(true);
+      setMapInitialized(true);
 
       map.current?.addSource("route", {
         type: "geojson",
@@ -212,10 +109,23 @@ export default function PostsDetailPage() {
           properties: {},
           geometry: {
             type: "LineString",
-            coordinates: pathCoordinates.map((coord) => [coord.lng, coord.lat]),
+            coordinates: pathCoordinates.map((coord: any) => [
+              coord.lng,
+              coord.lat,
+            ]),
           },
         },
       });
+
+      map.current?.addControl(
+        new mapboxgl.GeolocateControl({
+          positionOptions: {
+            enableHighAccuracy: true,
+          },
+          trackUserLocation: true,
+          showUserHeading: true,
+        })
+      );
 
       map.current?.addLayer({
         id: "route",
@@ -231,33 +141,29 @@ export default function PostsDetailPage() {
         },
       });
 
-      // Add start and end markers
       if (pathCoordinates.length > 0) {
-        // Start marker
         new mapboxgl.Marker({ color: "#4CAF50" })
           .setLngLat(pathCoordinates[0])
           .setPopup(new mapboxgl.Popup().setHTML("<h3>Start</h3>"))
           .addTo(map.current);
 
-        // End marker
         new mapboxgl.Marker({ color: "#F44336" })
           .setLngLat(pathCoordinates[pathCoordinates.length - 1])
           .setPopup(new mapboxgl.Popup().setHTML("<h3>End</h3>"))
           .addTo(map.current);
       }
-      setMapLoaded(false);
     });
 
     return () => {
       if (map.current) {
         map.current.remove();
         map.current = null;
+        setMapInitialized(false);
       }
     };
-  }, [post?.exerciseSession?.routes, mapLoaded]);
+  }, [post?.exerciseSession?.routes]);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) =>
-    setAnchorEl(event.currentTarget);
+  const handleMenuOpen = (event: any) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
   const handleRemovePostClick = () => setRemovePostDialogOpen(true);
@@ -268,18 +174,18 @@ export default function PostsDetailPage() {
     setEditPostDialogOpen(false);
   };
 
-  const handleToggleReplies = (commentId: string) => {
-    setExpandedReplies((prev) => ({
+  const handleToggleReplies = (commentId: any) => {
+    setExpandedReplies((prev: any) => ({
       ...prev,
       [commentId]: !prev[commentId],
     }));
   };
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (event: any) => {
     setSearchQuery(event.target.value);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: any) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -290,16 +196,16 @@ export default function PostsDetailPage() {
     });
   };
 
-  const calculateDuration = (start: string, end: string) => {
+  const calculateDuration = (start: any, end: any) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
     const diff = endDate.getTime() - startDate.getTime();
-    return Math.round(diff / (1000 * 60)); // minutes
+    return Math.round(diff / (1000 * 60));
   };
 
   const filteredComments =
     post?.comments.filter(
-      (comment) =>
+      (comment: any) =>
         comment.user.username
           .toLowerCase()
           .includes(searchQuery.toLowerCase()) ||
@@ -327,7 +233,7 @@ export default function PostsDetailPage() {
       <CommonBreadcrumb
         items={[
           { name: "Dashboard", link: "/dashboard" },
-          { name: "Posts", link: "/admin/posts" },
+          { name: "Posts", link: "/posts" },
           { name: post.title },
         ]}
       />
@@ -345,8 +251,11 @@ export default function PostsDetailPage() {
           <Box className="post-meta">
             <CommonAvatar uri={post.user.image?.url} />
             <Box>
-              <Link to={`/admin/users/${post.user.id}`}>
-                <Typography className="author">{post.user.username}</Typography>
+              <Link to={`/users/${post.user.id}`}>
+                <Typography className="author">
+                  {post.user.name}{" "}
+                  <span className="author-username">@{post.user.username}</span>
+                </Typography>
               </Link>
               <Typography className="time" variant="caption">
                 {formatDate(post.createdAt)}
@@ -361,7 +270,7 @@ export default function PostsDetailPage() {
         <Box className="post-tabs">
           <Button
             className={`btn-tab btn-tab-left ${
-              activeTab === "details" ? "btn-tag-active" : ""
+              activeTab === "details" ? "btn-tab-active" : ""
             }`}
             onClick={() => setActiveTab("details")}
           >
@@ -369,7 +278,7 @@ export default function PostsDetailPage() {
           </Button>
           <Button
             className={`btn-tab btn-tab-right ${
-              activeTab === "comments" ? "btn-tag-active" : ""
+              activeTab === "comments" ? "btn-tab-active" : ""
             }`}
             onClick={() => setActiveTab("comments")}
             sx={{ ml: 2 }}
@@ -379,122 +288,14 @@ export default function PostsDetailPage() {
         </Box>
 
         {activeTab === "details" ? (
-          <>
-            <Box className="post-content-section">
-              <Typography className="post-content">{post.content}</Typography>
-
-              {post.images?.length > 0 && (
-                <Box className="post-images">
-                  {post.images.map((image) => (
-                    <img
-                      key={image.id}
-                      src={image.url}
-                      alt="Post content"
-                      className="post-image"
-                    />
-                  ))}
-                </Box>
-              )}
-            </Box>
-
-            <Box className="post-stats">
-              <Box className="stat-box">
-                <Favorite className="stat-icon" fontSize="small" />
-                <Typography variant="body2">
-                  {post.stats.upvotes} Upvotes
-                </Typography>
-              </Box>
-              <Box className="stat-box">
-                <ChatBubbleOutline fontSize="small" />
-                <Typography variant="body2">
-                  {post.stats.commentCount} Comments
-                </Typography>
-              </Box>
-            </Box>
-
-            {post.exerciseSession && (
-              <Box className="exercise-session-card">
-                <Typography variant="h6" className="section-title">
-                  <DirectionsRun sx={{ mr: 1 }} /> Exercise Session
-                </Typography>
-
-                <Grid container spacing={2} className="session-stats">
-                  <Grid item xs={6} sm={3}>
-                    <Card variant="outlined" className="stat-card">
-                      <CardContent>
-                        <Timer color="primary" />
-                        <Typography variant="h6">
-                          {calculateDuration(
-                            post.exerciseSession.startTime,
-                            post.exerciseSession.endTime
-                          )}{" "}
-                          min
-                        </Typography>
-                        <Typography variant="caption">Duration</Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Card variant="outlined" className="stat-card">
-                      <CardContent>
-                        <LocalFireDepartment color="primary" />
-                        <Typography variant="h6">
-                          {getNameFromExerciseType(
-                            post.exerciseSession.exerciseType
-                          )}
-                        </Typography>
-                        <Typography variant="caption">Exercise Type</Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Card variant="outlined" className="stat-card">
-                      <CardContent>
-                        <Favorite color="error" />
-                        <Typography variant="h6">
-                          {post.exerciseSession.routes.length}
-                        </Typography>
-                        <Typography variant="caption">Route Points</Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                </Grid>
-
-                {post.exerciseSession.routes.length > 0 && (
-                  <Box className="map-section">
-                    <Typography variant="subtitle1" className="section-title">
-                      Exercise Route
-                    </Typography>
-                    <div
-                      ref={mapContainer}
-                      style={mapContainerStyle}
-                      className="map-container"
-                    />
-                  </Box>
-                )}
-              </Box>
-            )}
-
-            <Box className="post-actions">
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<Edit />}
-                onClick={handleEditPostClick}
-              >
-                Edit Post
-              </Button>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<Delete />}
-                onClick={handleRemovePostClick}
-                sx={{ ml: 2 }}
-              >
-                {post.isDeleted ? "Permanently Delete" : "Delete Post"}
-              </Button>
-            </Box>
-          </>
+          <PDPTabDetail
+            post={post}
+            calculateDuration={calculateDuration}
+            mapContainer={mapContainer}
+            mapContainerStyle={mapContainerStyle}
+            handleEditPostClick={handleEditPostClick}
+            handleRemovePostClick={handleRemovePostClick}
+          />
         ) : (
           <Box className="comments-section">
             <TextField
@@ -507,7 +308,15 @@ export default function PostsDetailPage() {
               size="small"
               InputProps={{
                 startAdornment: (
-                  <Box sx={{ color: "action.active", mr: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "action.active",
+                      mr: 1,
+                    }}
+                  >
                     <ChatBubbleOutline />
                   </Box>
                 ),
@@ -515,16 +324,17 @@ export default function PostsDetailPage() {
             />
 
             {filteredComments.length > 0 ? (
-              filteredComments.map((comment) => (
+              filteredComments.map((comment: any) => (
                 <Box key={comment.id} className="comment">
-                  <Avatar className="comment-avatar">
-                    {comment.user.username.charAt(0).toUpperCase()}
-                  </Avatar>
+                  <CommonAvatar uri={comment.user.image?.url} />
                   <Box className="comment-content">
                     <Box className="comment-header">
-                      <Link to={`/admin/users/${comment.user.id}`}>
+                      <Link to={`/users/${comment.user.id}`}>
                         <Typography className="comment-author">
-                          {comment.user.username}
+                          {post.user.name}{" "}
+                          <span className="author-username">
+                            @{post.user.username}
+                          </span>
                         </Typography>
                       </Link>
                       <Typography className="comment-time">
@@ -535,7 +345,7 @@ export default function PostsDetailPage() {
                     <Box className="comment-actions">
                       <Box className="vote-actions">
                         <IconButton size="small">
-                          <ThumbUp fontSize="small" />
+                          <Favorite fontSize="small" />
                           <Typography variant="caption" sx={{ ml: 0.5 }}>
                             {comment.upvotes}
                           </Typography>
@@ -562,14 +372,12 @@ export default function PostsDetailPage() {
                     </Box>
 
                     {expandedReplies[comment.id] &&
-                      comment.subComments.map((reply) => (
+                      comment.subComments.map((reply: any) => (
                         <Box key={reply.id} className="comment reply">
-                          <Avatar className="comment-avatar">
-                            {reply.user.username.charAt(0).toUpperCase()}
-                          </Avatar>
+                          <CommonAvatar uri={reply.user.image?.url} />
                           <Box className="comment-content">
                             <Box className="comment-header">
-                              <Link to={`/admin/users/${reply.user.id}`}>
+                              <Link to={`/users/${reply.user.id}`}>
                                 <Typography className="comment-author">
                                   {reply.user.username}
                                 </Typography>
@@ -583,7 +391,7 @@ export default function PostsDetailPage() {
                             </Typography>
                             <Box className="comment-actions">
                               <IconButton size="small">
-                                <ThumbUp fontSize="small" />
+                                <Favorite fontSize="small" />
                                 <Typography variant="caption" sx={{ ml: 0.5 }}>
                                   {reply.upvotes}
                                 </Typography>
@@ -606,7 +414,6 @@ export default function PostsDetailPage() {
         )}
       </Box>
 
-      {/* Edit Post Dialog */}
       <CommonDialog
         open={editPostDialogOpen}
         onClose={handleDialogClose}
@@ -619,7 +426,6 @@ export default function PostsDetailPage() {
               variant="contained"
               color="primary"
               onClick={() => {
-                /* Handle post edit */
                 handleDialogClose();
               }}
             >
@@ -646,7 +452,6 @@ export default function PostsDetailPage() {
         />
       </CommonDialog>
 
-      {/* Remove Post Dialog */}
       <CommonDialog
         open={removePostDialogOpen}
         onClose={handleDialogClose}
@@ -658,7 +463,6 @@ export default function PostsDetailPage() {
               variant="contained"
               color="error"
               onClick={() => {
-                /* Handle post removal */
                 handleDialogClose();
               }}
             >

@@ -1,0 +1,101 @@
+@use "@scss/common.scss" as *;
+
+.udp-login-information {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px 1.5rem;
+  margin-bottom: 20px;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    .title {
+      font-size: 19px;
+      color: $primary-dark-color;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .btn-more {
+      color: #757575;
+      padding: 4px;
+    }
+  }
+
+  .login-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+
+    .detail-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 8px 0;
+
+      .detail-icon {
+        color: $primary-dark-color;
+        font-size: 20px;
+        margin-top: 2px;
+      }
+
+      .detail-content {
+        .detail-label {
+          font-size: 13px;
+          color: #757575;
+          margin-bottom: 4px;
+          font-weight: 500;
+        }
+
+        .detail-value {
+          font-size: 14px;
+          color: #333;
+          margin: 0;
+        }
+
+        .verification-chip {
+          .MuiChip-icon {
+            color: inherit;
+          }
+        }
+
+        .reset-info {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+
+          .reset-chip {
+            align-self: flex-start;
+          }
+
+          .reset-date {
+            font-size: 12px;
+            color: #757575;
+            margin: 0;
+          }
+        }
+
+        .provider-chip {
+          .provider-icon {
+            margin-right: 4px;
+            font-size: 16px;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .udp-login-information {
+    padding: 16px;
+
+    .login-details {
+      grid-template-columns: 1fr;
+    }
+  }
+}
