@@ -436,7 +436,7 @@ export default function UsersDetailPage() {
                   </Button>
                 }
               >
-                <UserDetailRecordExerciseSession userId={user.id} />
+                <UserDetailRecordExerciseSession userId={user?.id} />
               </CommonDialog>
             )}
 

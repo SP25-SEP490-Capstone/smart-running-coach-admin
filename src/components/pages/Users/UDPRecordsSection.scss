@@ -52,7 +52,7 @@
         }
 
         &:hover {
-          background-color: darken($primary-dark-color, 10%);
+          background-color: $primary-dark-color;
         }
       }
     }

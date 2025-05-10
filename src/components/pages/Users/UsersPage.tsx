@@ -412,7 +412,6 @@ export default function UsersPage() {
                 Points & Level
               </TableSortLabel>
             </TableCell>
-            <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -526,14 +525,6 @@ export default function UsersPage() {
                       </Typography>
                     </Box>
                   </Box>
-                </TableCell>
-                <TableCell>
-                  <Button className="btn-edit">
-                    <EditIcon />
-                  </Button>
-                  <Button className="btn-delete">
-                    <DoDisturbIcon />
-                  </Button>
                 </TableCell>
               </TableRow>
             ))
