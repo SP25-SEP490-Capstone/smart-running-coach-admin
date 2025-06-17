@@ -1,0 +1,76 @@
+@use "@scss/common.scss" as *;
+
+.udp-records-section {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px 1.5rem;
+
+  .label {
+    font-size: 19px;
+    color: $primary-dark-color;
+    font-weight: 600;
+    margin-bottom: 25px;
+  }
+
+  .records-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+
+    .record-button {
+      text-transform: none;
+      justify-content: flex-start;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: $primary-dark-color;
+      border-color: rgba(0, 0, 0, 0.12);
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: $primary-dark-color;
+        color: white;
+
+        .record-icon {
+          color: white;
+        }
+      }
+
+      .record-icon {
+        color: $primary-dark-color;
+        margin-right: 8px;
+      }
+
+      &.highlight {
+        background-color: $primary-dark-color;
+        color: white;
+        font-weight: 500;
+
+        .record-icon {
+          color: white;
+        }
+
+        &:hover {
+          background-color: $primary-dark-color;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .records-section {
+    .records-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .records-section {
+    .records-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

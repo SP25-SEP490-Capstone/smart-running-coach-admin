@@ -1,0 +1,31 @@
+@use "@scss/common.scss" as *;
+
+.udp-expert-approval {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px 1.5rem;
+
+  .label {
+    font-size: 19px;
+    color: $primary-dark-color;
+    font-weight: 600;
+    margin-bottom: 25px;
+  }
+
+  .toggle-button {
+    background-color: $primary-dark-color;
+  }
+
+  .status-text {
+    margin-bottom: 15px;
+
+    .approved {
+      color: #4caf50;
+    }
+
+    .not-approved {
+      color: #f44336;
+    }
+  }
+}

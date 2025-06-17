@@ -1,0 +1,217 @@
+@use "@scss/common.scss" as *;
+@use 'sass:color';
+
+.schedules-detail-page {
+  padding: 32px;
+  max-width: 1280px;
+  margin: 0 auto;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: #f5f7fa;
+
+  .schedules-container {
+    background-color: #ffffff;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .user-id {
+    color: #6b7280;
+    font-size: 13px;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  &.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+  }
+
+  &.error {
+    color: #dc2626;
+    padding: 48px;
+    text-align: center;
+    font-weight: 600;
+    background-color: #fef2f2;
+    border-radius: 12px;
+  }
+
+  .schedules-header {
+    margin-bottom: 40px;
+
+    .schedules-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+  }
+
+  .schedules-meta {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    gap: 16px;
+
+    .author {
+      font-weight: 600;
+      color: $primary-dark-color;
+      text-decoration: none;
+      font-size: 18px;
+    }
+
+    .details {
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  }
+
+  .author-username {
+    color: #9ca3af !important;
+    font-weight: 500 !important;
+    font-size: 14px;
+  }
+
+  .schedules-content {
+    margin-top: 24px;
+  }
+
+  .accordion-panel, .calendar-panel {
+    padding: 24px;
+    border-radius: 12px;
+    background: #ffffff;
+
+    .panel-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 16px;
+      border-left: 4px solid $primary-dark-color;
+      padding-left: 12px;
+    }
+  }
+
+  .schedule-accordion {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .accordion-summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .MuiAccordionSummary-root {
+      background-color: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .MuiAccordionDetails-root {
+      padding: 16px;
+    }
+  }
+
+  .day-accordion {
+    margin: 8px 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+
+    .MuiAccordionSummary-root {
+      background-color: #f1f5f9;
+    }
+  }
+
+  .detail-card {
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    background: #f9fafb;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .detail-title {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+
+    .goals {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 8px 0;
+
+      .MuiTypography-root {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: #ffffff;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 13px;
+      }
+    }
+  }
+
+  .calendar-panel {
+    .rbc-calendar {
+      .rbc-event {
+        padding: 2px 4px;
+        font-weight: 500;
+      }
+
+      .rbc-day-bg {
+        background: #ffffff;
+      }
+
+      .rbc-today {
+        background: #e0f2fe;
+      }
+
+      .rbc-off-range-bg {
+        background: #f3f4f6;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 24px;
+
+    .schedules-header .schedules-title {
+      font-size: 28px;
+    }
+
+    .schedules-container {
+      padding: 20px;
+    }
+
+    .accordion-panel, .calendar-panel {
+      padding: 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 16px;
+
+    .schedules-meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .detail-card .goals {
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+}

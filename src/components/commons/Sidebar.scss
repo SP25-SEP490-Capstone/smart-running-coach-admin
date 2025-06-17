@@ -1,0 +1,137 @@
+@use "@scss/common.scss" as *;
+
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+  transition: width 0.3s ease-in-out;
+  overflow: hidden;
+
+  &.shrink {
+    width: 80px;
+
+    .sidebar-logo p,
+    .sidebar-menu span {
+      display: none;
+    }
+
+    .sidebar-logo {
+      img {
+        width: 40px;
+        height: 40px;
+      }
+    }
+
+    svg {
+      margin-right: 0px !important;
+    }
+
+    a, .coming-soon {
+      justify-content: center !important;
+    }
+
+    .sidebar-header {
+      justify-content: center !important;
+    }
+
+    .coming-soon-badge {
+      display: none;
+    }
+  }
+
+  .sidebar-header {
+    width: 100%;
+    padding: 10px 20px;
+    cursor: pointer;
+    display: flex;
+
+    .menu-icon {
+      font-size: 32px;
+      margin-bottom: 13px;
+      color: #000;
+    }
+  }
+
+  .sidebar-logo {
+    text-align: center;
+
+    img {
+      width: 60px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+      transition: opacity 0.3s ease-in-out;
+    }
+  }
+
+  .sidebar-menu {
+    width: 100%;
+    margin-top: 20px;
+
+    ul {
+      list-style: none;
+      padding: 0;
+
+      li {
+        width: 100%;
+
+        a, .coming-soon {
+          display: flex;
+          align-items: center;
+          padding: 12px 20px;
+          text-decoration: none;
+          color: #333;
+          font-size: 16px;
+          transition: background 0.3s, color 0.3s;
+          text-wrap: nowrap;
+          position: relative;
+
+          svg {
+            margin-right: 12px;
+            transition: margin 0.3s ease-in-out;
+          }
+
+          &.active {
+            font-weight: 500;
+            color: $primary-dark-color;
+            background: #007bff22;
+            box-shadow: -3px 0 0px 0px $primary-color inset;
+          }
+
+          &:hover {
+            background: rgba(0, 123, 255, 0.1);
+          }
+        }
+
+        .coming-soon {
+          opacity: 0.6;
+          cursor: not-allowed;
+
+          &:hover {
+            background: rgba(0, 0, 0, 0.05);
+          }
+
+          .coming-soon-badge {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: $primary-color;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+          }
+        }
+      }
+    }
+  }
+}

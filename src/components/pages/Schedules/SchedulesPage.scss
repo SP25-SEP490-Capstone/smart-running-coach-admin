@@ -1,0 +1,242 @@
+@use "@scss/common.scss" as *;
+
+.schedules-page {
+  padding: 20px 2rem;
+  font-family: "Inter", sans-serif;
+
+  .title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    .title {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0;
+      color: #212121;
+    }
+  }
+
+  .MuiTableCell-root {
+    font-weight: 500 !important;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+    align-items: center;
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    .input-search {
+      background-color: white;
+      min-width: 250px;
+      flex-grow: 1;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      .MuiChip-root {
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        background-color: #f5f5f5;
+        color: #424242;
+
+        &:hover {
+          transform: translateY(-1px);
+          background-color: #e0e0e0;
+        }
+
+        &.MuiChip-colorPrimary {
+          background-color: #1976d2;
+          color: white;
+        }
+      }
+    }
+
+    .btn-reset {
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-weight: 500;
+      text-transform: none;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      color: #616161;
+      border: 1px solid #e0e0e0;
+      background-color: white;
+
+      &:hover {
+        background-color: #f5f5f5;
+      }
+    }
+
+    .btn-export {
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-weight: 500;
+      text-transform: none;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      color: white;
+      background-color: $primary-dark-color;
+      border: none;
+      box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+
+      &:hover {
+        background-color: #1565c0;
+      }
+    }
+
+    .btn-filter {
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-weight: 500;
+      text-transform: none;
+      font-size: 14px;
+      color: #616161;
+      border: 1px solid #e0e0e0;
+      background-color: white;
+
+      &:hover {
+        background-color: #f5f5f5;
+      }
+    }
+  }
+
+  .table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    .MuiTable-root {
+      min-width: 100%;
+    }
+
+    .MuiTableCell-head {
+      background-color: $primary-dark-color !important;
+      color: #fff;
+
+      * {
+        color: #fff !important;
+      }
+    }
+
+    .MuiTableCell-root {
+      padding: 14px 16px;
+      font-size: 14px;
+
+      &.MuiTableCell-head {
+        font-weight: 600;
+      }
+    }
+
+    .MuiTableSortLabel-root {
+      color: #757575;
+
+      &:hover {
+        color: #424242;
+      }
+
+      &.Mui-active {
+        color: #212121;
+      }
+    }
+
+    .user-name {
+      font-weight: 500;
+      color: #212121;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #1976d2;
+        text-decoration: none;
+      }
+    }
+
+    .status-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      text-transform: capitalize;
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #000;
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .MuiIconButton-root {
+      padding: 6px;
+      color: #757575;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+        color: #424242;
+      }
+    }
+  }
+
+  .MuiTablePagination-root {
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .react-loading-skeleton {
+    line-height: unset;
+    margin-bottom: 4px;
+    border-radius: 4px;
+  }
+
+  .btn-refresh {
+    background-color: $primary-dark-color;
+  }
+
+  @media (max-width: 1200px) {
+    padding: 20px 1rem;
+
+    .actions {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+
+      > * {
+        width: 100%;
+      }
+
+      .input-search {
+        min-width: unset;
+      }
+    }
+  }
+
+  @media (max-width: 600px) {
+    padding: 20px 0.5rem;
+
+    .title-container {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .status-badges {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+}

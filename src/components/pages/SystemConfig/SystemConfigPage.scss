@@ -1,0 +1,304 @@
+@use "@scss/common.scss" as *;
+
+$primary: $primary-dark-color;
+$secondary: #00CEC9;
+$warning: #FFB900;
+$danger: #FF6B6B;
+$background-dark: #1A202C;
+$text-light: #2D3436;
+$text-dark: #E2E8F0;
+$card-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+$card-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.15);
+
+.system-config-page {
+  padding: 20px 2rem;
+  color: $text-light;
+  min-height: 100vh;
+
+  .title-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #212121;
+      margin: 0;
+    }
+
+    .btn-refresh {
+      background: $primary;
+      color: white;
+      padding: 0.5rem;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: darken($primary, 10%);
+        transform: scale(1.1);
+      }
+
+      &:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .spin {
+        animation: spin 1s linear infinite;
+      }
+    }
+  }
+
+  .info-cards {
+    margin-bottom: 2.5rem;
+  }
+
+  .info-card {
+    border-radius: 12px;
+    background: white;
+    box-shadow: $card-shadow;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: $card-shadow-hover;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+    }
+
+    &.cpu::before {
+      background: linear-gradient(90deg, $primary, lighten($primary, 20%));
+    }
+
+    &.memory::before {
+      background: linear-gradient(90deg, $secondary, lighten($secondary, 20%));
+    }
+
+    &.storage::before {
+      background: linear-gradient(90deg, #55EFC4, lighten(#55EFC4, 20%));
+    }
+
+    &.network::before {
+      background: linear-gradient(90deg, #74B9FF, lighten(#74B9FF, 20%));
+    }
+
+    &.system-info::before {
+      background: linear-gradient(90deg, #A29BFE, lighten(#A29BFE, 20%));
+    }
+
+    &.system-health::before {
+      background: linear-gradient(90deg, #FFEAA7, lighten(#FFEAA7, 20%));
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: $text-light;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.875rem;
+      color: lighten($text-light, 20%);
+      margin-bottom: 1rem;
+    }
+
+    .info-detail {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+
+      &:hover {
+        background: rgba($primary, 0.05);
+      }
+
+      span {
+        &:first-child {
+          color: lighten($text-light, 20%);
+          font-weight: 500;
+        }
+
+        &:last-child {
+          font-weight: 600;
+          color: $text-light;
+        }
+
+        &.truncate {
+          max-width: 140px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+
+    .progress-bar {
+      margin-top: 1.25rem;
+
+      .MuiLinearProgress-root {
+        height: 10px;
+        border-radius: 5px;
+        background: #E2E8F0;
+
+        .MuiLinearProgress-bar {
+          background: $secondary;
+          border-radius: 5px;
+        }
+      }
+
+      .warning {
+        .MuiLinearProgress-bar {
+          background: $warning;
+        }
+      }
+    }
+  }
+
+  .system-stats {
+    .stats-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: $text-light;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid rgba($primary, 0.2);
+    }
+
+    .info-detail {
+      background: rgba($primary, 0.03);
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba($primary, 0.1);
+        transform: translateX(4px);
+      }
+
+      span:first-child {
+        color: lighten($text-light, 20%);
+      }
+
+      .status-text {
+        font-weight: 600;
+
+        &.optimal {
+          color: $secondary;
+        }
+
+        &.warning {
+          color: $warning;
+        }
+      }
+    }
+  }
+
+  .react-loading-skeleton {
+    border-radius: 6px;
+    opacity: 0.6;
+  }
+}
+
+// Dark mode styles
+[data-theme="dark"] {
+  .system-config-page {
+    background: $background-dark;
+    color: $text-dark;
+
+    .page-title {
+      color: #E2E8F0; // Lighter for dark mode contrast
+    }
+
+    .info-card {
+      background: lighten($background-dark, 5%);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+
+      &:hover {
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      }
+
+      .card-title {
+        color: $text-dark;
+      }
+
+      .card-subtitle {
+        color: darken($text-dark, 20%);
+      }
+
+      .info-detail {
+        span {
+          &:first-child {
+            color: darken($text-dark, 20%);
+          }
+
+          &:last-child {
+            color: $text-dark;
+          }
+        }
+
+        &:hover {
+          background: rgba($primary, 0.15);
+        }
+      }
+
+      .progress-bar {
+        .MuiLinearProgress-root {
+          background: darken($text-dark, 40%);
+
+          .MuiLinearProgress-bar {
+            background: $secondary;
+          }
+        }
+
+        .warning {
+          .MuiLinearProgress-bar {
+            background: $warning;
+          }
+        }
+      }
+    }
+
+    .system-stats {
+      .stats-title {
+        color: $text-dark;
+        border-bottom-color: rgba($primary, 0.3);
+      }
+
+      .info-detail {
+        background: rgba($primary, 0.1);
+
+        &:hover {
+          background: rgba($primary, 0.2);
+        }
+
+        span:first-child {
+          color: darken($text-dark, 20%);
+        }
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
